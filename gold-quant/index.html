@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<!-- GoldQuant | Model Version: 1.0 | Last Calibrated: 2026-11-23 -->
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GoldQuant — تقييم الذهب والتنبؤ اليومي</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  // إعداد Tailwind: الوضع الداكن عبر class
+  if (window.tailwind) { tailwind.config = { darkMode: 'class' }; }
+</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --surface: #ffffff; --page: #f6f5f1; --ink: #1c1917; --ink-2: #57534e; --ink-3: #8a8580;
+    --grid: #e7e5e4; --border: #e4e1dc;
+    --gold: #a16207; --gold-band-90: #fde68a; --gold-band-80: #f5b83d; --gold-mid: #78350f;
+    --good: #15803d; --warn: #b45309; --bad: #b91c1c; --neutral: #57534e;
+  }
+  html.dark {
+    --surface: #1c1b19; --page: #121110; --ink: #f5f5f4; --ink-2: #c7c3bd; --ink-3: #8f8a84;
+    --grid: #2e2c29; --border: #34312d;
+    --gold: #f2c14e; --gold-band-90: #5c4513; --gold-band-80: #a9791c; --gold-mid: #fde68a;
+    --good: #4ade80; --warn: #fbbf24; --bad: #f87171; --neutral: #a8a29e;
+  }
+  body { font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; background: var(--page); color: var(--ink); }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; }
+  .muted { color: var(--ink-2); } .faint { color: var(--ink-3); }
+  .num { font-variant-numeric: tabular-nums; direction: ltr; unicode-bidi: isolate; display: inline-block; }
+  .inp { width: 100%; background: var(--page); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; color: var(--ink); direction: ltr; text-align: right; }
+  .inp:focus { outline: 2px solid var(--gold); outline-offset: 0; }
+  .btn { border-radius: 8px; padding: 7px 14px; font-weight: 600; font-size: 14px; border: 1px solid var(--border); background: var(--surface); color: var(--ink); cursor: pointer; transition: filter .15s; }
+  .btn:hover { filter: brightness(0.95); }
+  .btn-primary { background: var(--gold); color: #fff; border-color: transparent; }
+  html.dark .btn-primary { color: #1c1917; }
+  .btn-danger { color: var(--bad); }
+  .tab-btn { padding: 10px 14px; font-weight: 600; color: var(--ink-2); border-bottom: 3px solid transparent; white-space: nowrap; }
+  .tab-btn.active { color: var(--ink); border-bottom-color: var(--gold); }
+  .tbl { width: 100%; font-size: 14px; border-collapse: collapse; }
+  .tbl th { text-align: right; color: var(--ink-2); font-weight: 600; padding: 8px; border-bottom: 1px solid var(--border); }
+  .tbl td { padding: 7px 8px; border-bottom: 1px solid var(--grid); }
+  .pill { display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border-radius: 999px; font-size: 13px; font-weight: 600; border: 1px solid currentColor; }
+  .tip { position: relative; display: inline-flex; width: 18px; height: 18px; border-radius: 50%; align-items: center; justify-content: center; font-size: 12px; border: 1px solid var(--ink-3); color: var(--ink-2); cursor: help; }
+  .tip:hover::after, .tip:focus::after { content: attr(data-tip); position: absolute; top: 24px; right: -8px; width: 270px; background: var(--ink); color: var(--surface); padding: 8px 10px; border-radius: 8px; font-size: 12.5px; line-height: 1.6; z-index: 50; white-space: normal; }
+  .banner { border-radius: 10px; padding: 10px 14px; font-size: 14px; border: 1px solid; }
+  .banner-warn { color: var(--warn); border-color: var(--warn); background: color-mix(in srgb, var(--warn) 8%, transparent); }
+  .banner-info { color: var(--ink-2); border-color: var(--border); background: var(--surface); }
+  .banner-bad { color: var(--bad); border-color: var(--bad); background: color-mix(in srgb, var(--bad) 8%, transparent); }
+  .banner-good { color: var(--good); border-color: var(--good); background: color-mix(in srgb, var(--good) 8%, transparent); }
+  #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--surface); padding: 10px 18px; border-radius: 10px; font-size: 14px; opacity: 0; pointer-events: none; transition: opacity .25s; z-index: 100; max-width: 90vw; }
+  #toast.show { opacity: 1; }
+  .chart-box { position: relative; height: 300px; }
+  .hidden { display: none !important; } /* احتياطي إن لم يُحمَّل Tailwind */
+  label.lbl { font-size: 13px; color: var(--ink-2); display: block; margin-bottom: 4px; }
+</style>
+</head>
+<body class="min-h-screen">
+<header class="border-b" style="border-color:var(--border);background:var(--surface)">
+  <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-lg flex items-center justify-center font-bold" style="background:var(--gold);color:var(--surface)">Au</div>
+      <div>
+        <h1 class="text-lg font-bold leading-tight">GoldQuant — تقييم الذهب والتنبؤ اليومي</h1>
+        <p class="text-xs faint">النموذج 1.0 · آخر معايرة 2026-11-23 · السعودية · مصر · السعر العالمي</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <span id="liveStatus" class="text-xs muted"></span>
+      <button class="btn" id="btnFetchHeader" title="جلب السعر الحي">⟳ جلب السعر</button>
+      <button class="btn" id="btnTheme" title="تبديل الوضع الداكن">◐</button>
+    </div>
+  </div>
+  <nav class="max-w-7xl mx-auto px-4 flex overflow-x-auto" id="tabs">
+    <button class="tab-btn active" data-tab="dashboard">لوحة التحكم</button>
+    <button class="tab-btn" data-tab="forecast">التنبؤ</button>
+    <button class="tab-btn" data-tab="fair">التقييم العادل</button>
+    <button class="tab-btn" data-tab="data">البيانات</button>
+    <button class="tab-btn" data-tab="settings">الإعدادات</button>
+  </nav>
+</header>
+
+<main class="max-w-7xl mx-auto px-4 py-5 space-y-4">
+  <div id="banners" class="space-y-2"></div>
+
+  <!-- ================= لوحة التحكم ================= -->
+  <section id="tab-dashboard" class="tab space-y-4">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="kpis"></div>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div class="card p-4 lg:col-span-2">
+        <div class="flex items-baseline justify-between mb-2">
+          <h2 class="font-bold">السعر العالمي — آخر 30 يوماً</h2>
+          <span class="text-xs faint">دولار / أونصة</span>
+        </div>
+        <div class="chart-box"><canvas id="chartHistory"></canvas></div>
+        <p id="historyEmpty" class="text-sm faint hidden">لا توجد بيانات تاريخية بعد — أضف صفوفاً من تبويب البيانات.</p>
+      </div>
+      <div class="card p-5 flex flex-col" id="signalCard"></div>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="miniStats"></div>
+  </section>
+
+  <!-- ================= التنبؤ ================= -->
+  <section id="tab-forecast" class="tab space-y-4 hidden">
+    <div class="card p-4 flex flex-wrap items-end gap-4">
+      <div class="w-48">
+        <label class="lbl flex items-center gap-2">الانحياز mu (يومي)
+          <span class="tip" tabindex="0" data-tip="عدّل هذا عند الأحداث الجيوسياسية أو المضاربات: موجب = توقع صعود، سالب = توقع هبوط. مثال: 0.002 تعني انحيازاً صاعداً بنحو 0.2% لليوم. القيمة الأساسية 0.0002.">؟</span>
+        </label>
+        <input type="number" step="0.0001" id="inMu" class="inp">
+      </div>
+      <div class="w-48">
+        <label class="lbl">سعر مستهدف للاحتمال (دولار)</label>
+        <input type="number" step="1" id="inTarget" class="inp" placeholder="مثال 4300">
+      </div>
+      <button class="btn btn-primary" id="btnSimulate">تحديث المحاكاة (10,000 سيناريو)</button>
+      <span id="simMeta" class="text-xs faint"></span>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div class="card p-4">
+        <h2 class="font-bold mb-1">نطاقات السعر العالمي ليوم التداول القادم</h2>
+        <p class="text-xs faint mb-3">نطاقات احتمالية من Monte Carlo بتوزيع t ذي ذيول سميكة وتقلب EWMA — ليست رقماً مؤكداً.</p>
+        <table class="tbl" id="tblGlobalBands"></table>
+        <div class="grid grid-cols-2 gap-3 mt-4" id="probStats"></div>
+      </div>
+      <div class="card p-4">
+        <h2 class="font-bold mb-1">مخطط النطاقات (Box Plot)</h2>
+        <p class="text-xs faint mb-2">الصندوق الداكن = نطاق ثقة 80% (P10–P90) · الصندوق الفاتح = نطاق ثقة 90% (P5–P95) · الخط = الوسيط P50 · المعيّن = السعر الحالي</p>
+        <div class="chart-box" style="height:180px"><canvas id="chartBox"></canvas></div>
+        <h3 class="font-semibold text-sm mt-3 mb-1">توزيع السيناريوهات</h3>
+        <div class="chart-box" style="height:170px"><canvas id="chartHist"></canvas></div>
+      </div>
+    </div>
+
+    <div class="card p-4">
+      <h2 class="font-bold mb-1">التحويل المحلي لكل عيار وبلد (للجرام)</h2>
+      <p class="text-xs faint mb-3" id="localMeta"></p>
+      <div class="overflow-x-auto"><table class="tbl" id="tblLocal"></table></div>
+    </div>
+
+    <div class="card p-4 space-y-3">
+      <div class="flex flex-wrap items-center gap-3">
+        <h2 class="font-bold">التحقق الرجعي من النموذج</h2>
+        <button class="btn" id="btnCoverage">اختبار التغطية</button>
+        <button class="btn" id="btnChristoffersen">اختبار Christoffersen</button>
+      </div>
+      <p class="text-xs faint">يعيد بناء نطاق P10–P90 لكل يوم تاريخي باستخدام البيانات المتاحة حتى اليوم السابق فقط (بدون نظر للمستقبل)، وبانحياز أساسي mu = 0.0002.</p>
+      <div id="coverageResult"></div>
+      <div id="christResult"></div>
+      <div class="chart-box hidden" id="btChartWrap"><canvas id="chartBacktest"></canvas></div>
+    </div>
+  </section>
+
+  <!-- ================= التقييم العادل ================= -->
+  <section id="tab-fair" class="tab space-y-4 hidden">
+    <div class="card p-4">
+      <h2 class="font-bold mb-1">نموذج الانحدار للقيمة العادلة</h2>
+      <p class="text-sm muted mb-1 num" style="direction:ltr">FV = α + β1·RealYield + β2·DXY + β3·CB_Flows + β4·Geo_Index</p>
+      <p class="text-xs faint mb-4">المعاملات تُقدَّر خارجياً (مثلاً في Python بانحدار OLS) وتُدخل هنا. القيم الافتراضية توضيحية فقط وليست معايرة فعلية — استبدلها بتقديراتك.</p>
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-3" id="coeffInputs"></div>
+    </div>
+    <div class="card p-4">
+      <h2 class="font-bold mb-3">المتغيرات الحالية</h2>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3" id="varInputs"></div>
+      <div class="flex flex-wrap gap-2 mt-3">
+        <button class="btn" id="btnFvFromData">استخدام العائد الحقيقي ومؤشر الدولار من آخر صف</button>
+        <button class="btn" id="btnFred">جلب من FRED (DFII10 · DTWEXBGS)</button>
+      </div>
+      <p class="text-xs faint mt-2">تنبيه: DTWEXBGS هو مؤشر الدولار الواسع من الاحتياطي الفيدرالي (حوالي 120)، ويختلف في المستوى عن مؤشر DXY (حوالي 100). استخدم نفس المؤشر الذي قدّرت عليه المعاملات.</p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="fairResult"></div>
+  </section>
+
+  <!-- ================= البيانات ================= -->
+  <section id="tab-data" class="tab space-y-4 hidden">
+    <div class="card p-4">
+      <h2 class="font-bold mb-3">إضافة صف يومي</h2>
+      <form id="rowForm" class="grid grid-cols-2 md:grid-cols-6 gap-3 items-end">
+        <div><label class="lbl">التاريخ</label><input type="date" id="fDate" class="inp" required></div>
+        <div><label class="lbl">السعر العالمي $/oz</label><input type="number" step="0.01" id="fGold" class="inp" required></div>
+        <div><label class="lbl">صرف الريال (USD/SAR)</label><input type="number" step="0.0001" id="fSar" class="inp" required></div>
+        <div><label class="lbl">صرف الجنيه (USD/EGP)</label><input type="number" step="0.0001" id="fEgp" class="inp" required></div>
+        <div><label class="lbl">العائد الحقيقي %</label><input type="number" step="0.01" id="fRy" class="inp"></div>
+        <div><label class="lbl">مؤشر الدولار</label><input type="number" step="0.01" id="fDxy" class="inp"></div>
+        <div class="col-span-2 md:col-span-6 flex flex-wrap gap-2">
+          <button type="submit" class="btn btn-primary">إضافة الصف</button>
+          <button type="button" class="btn" id="btnFetchNow">جلب السعر الآن</button>
+          <span id="fetchMsg" class="text-sm muted self-center"></span>
+        </div>
+      </form>
+    </div>
+    <div class="card p-4">
+      <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+        <h2 class="font-bold">البيانات المخزنة <span id="rowCount" class="text-sm faint"></span></h2>
+        <div class="flex flex-wrap gap-2">
+          <label class="btn">استيراد CSV<input type="file" accept=".csv,text/csv" id="csvFile" class="hidden"></label>
+          <button class="btn" id="btnExport">تصدير CSV</button>
+          <button class="btn" id="btnDemo" title="بيانات مصطنعة للتجربة فقط">بيانات تجريبية</button>
+          <button class="btn btn-danger" id="btnClear">مسح الكل</button>
+        </div>
+      </div>
+      <p class="text-xs faint mb-2">صيغة CSV: date,gold_usd_oz,usd_sar,usd_egp,real_yield,dxy</p>
+      <div class="overflow-x-auto max-h-[480px] overflow-y-auto"><table class="tbl" id="tblData"></table></div>
+    </div>
+  </section>
+
+  <!-- ================= الإعدادات ================= -->
+  <section id="tab-settings" class="tab space-y-4 hidden">
+    <div class="card p-4">
+      <h2 class="font-bold mb-3">المصنعية (تُضاف لكل جرام)</h2>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div><label class="lbl">السعودية (ريال/جرام)</label><input type="number" step="0.01" id="sPremSA" class="inp"></div>
+        <div><label class="lbl">مصر (جنيه/جرام)</label><input type="number" step="0.01" id="sPremEG" class="inp"></div>
+      </div>
+      <p class="text-xs faint mt-2">القيمة 0 تعني سعر الخام دون مصنعية أو ضريبة. أضف متوسط المصنعية في السوق المحلي ليقترب السعر من سعر البيع الفعلي.</p>
+    </div>
+    <div class="card p-4">
+      <h2 class="font-bold mb-3">معاملات النموذج الإحصائي</h2>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div><label class="lbl">lambda في EWMA</label><input type="number" step="0.01" min="0.5" max="0.999" id="sLambda" class="inp"></div>
+        <div><label class="lbl flex items-center gap-2">nu في توزيع t <span class="tip" tabindex="0" data-tip="درجات الحرية. الافتراضي 5. قلّله إلى 3 في أوقات الأزمات لإعطاء ذيول أكثر سماكة (احتمال أعلى لحركات حادة). يجب أن يكون أكبر من 2.">؟</span></label><input type="number" step="0.5" min="2.1" id="sNu" class="inp"></div>
+        <div><label class="lbl flex items-center gap-2">مضاعف sigma <span class="tip" tabindex="0" data-tip="يُضرب في تقلب EWMA. اتركه 1 ما لم يقترح اختبار التغطية قيمة أخرى لإعادة المعايرة.">؟</span></label><input type="number" step="0.01" min="0.1" id="sMult" class="inp"></div>
+        <div><label class="lbl">عدد السيناريوهات</label><input type="number" step="1000" min="1000" max="100000" id="sN" class="inp"></div>
+      </div>
+      <div class="flex flex-wrap gap-2 mt-4">
+        <button class="btn btn-primary" id="btnSaveSettings">حفظ الإعدادات</button>
+        <button class="btn btn-danger" id="btnResetModel">إعادة تعيين النموذج</button>
+      </div>
+      <p class="text-xs faint mt-2">إعادة التعيين تعيد المعاملات والمصنعية للقيم الافتراضية ولا تحذف البيانات المخزنة.</p>
+    </div>
+    <div class="card p-4 text-sm muted leading-7">
+      <h2 class="font-bold mb-2" style="color:var(--ink)">منهجية النموذج</h2>
+      <ul class="list-disc pr-5 space-y-1">
+        <li>العوائد اللوغاريتمية لآخر 30 يوماً، والتقلب بطريقة EWMA (RiskMetrics) بمعامل lambda.</li>
+        <li>عند توفر أقل من 5 صفوف يُستخدم sigma افتراضي 1.2% يومياً.</li>
+        <li>المحاكاة: S₁ = S₀·exp((μ − σ²/2) + σ·z) حيث z من توزيع t معياري التباين بدرجات حرية nu.</li>
+        <li>السعر المحلي للجرام = (السعر العالمي ÷ 31.1035) × سعر الصرف × (العيار ÷ 24) + المصنعية.</li>
+        <li>نسبة العدالة = السعر السوقي ÷ القيمة العادلة: أكبر من 1.15 مبالغ فيه، 0.85–1.15 عادل، أقل من 0.85 أقل من قيمته.</li>
+        <li>هذه أداة تحليل إحصائي وليست نصيحة استثمارية؛ كل المخرجات نطاقات احتمالية.</li>
+      </ul>
+    </div>
+  </section>
+</main>
+<div id="toast"></div>
+
+<script>
+// Model Version: 1.0 | Last Calibrated: 2026-11-23
+"use strict";
+
+// ===================== الثوابت =====================
+const OUNCE_TO_GRAM = 31.1035;
+const STORAGE_KEY = "gold_model_data";
+const SETTINGS_KEY = "gold_model_settings";
+const LIVE_KEY = "gold_last_live";
+const THEME_KEY = "gold_theme";
+const DEFAULT_SIGMA = 0.012;
+const BASE_MU = 0.0002;
+const CORS_PROXIES = [
+  (u) => "https://api.cors.lol/?url=" + encodeURIComponent(u),
+  (u) => "https://corsproxy.io/?url=" + encodeURIComponent(u)
+];
+const DEFAULT_SETTINGS = {
+  premiumSA: 0, premiumEG: 0,
+  lambda: 0.94, nu: 5, mu: BASE_MU, sigmaMult: 1, nSims: 10000,
+  coeffs: { alpha: 5200, beta1: -450, beta2: -12, beta3: 1.5, beta4: 8 },
+  fvInputs: { realYield: 1.8, dxy: 99, cbFlows: 80, geoIndex: 120 }
+};
+
+// ===================== أدوات عامة =====================
+const $ = (id) => document.getElementById(id);
+const clone = (o) => JSON.parse(JSON.stringify(o));
+const fmt = (x, d = 2) => (x === null || x === undefined || !isFinite(x)) ? "—" :
+  Number(x).toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
+const pct = (x, d = 1) => (x === null || !isFinite(x)) ? "—" : (x * 100).toFixed(d) + "%";
+const todayISO = () => new Date().toISOString().slice(0, 10);
+const cssVar = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+const num = (v) => { const n = parseFloat(v); return isFinite(n) ? n : null; };
+
+// إشعار مؤقت أسفل الشاشة
+let toastTimer = null;
+const toast = (msg, ms = 3200) => {
+  const t = $("toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), ms);
+};
+
+// قراءة/كتابة آمنة في localStorage (قد يكون محظوراً في بعض المتصفحات)
+const lsGet = (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, v); return true; } catch (e) { toast("تعذر الحفظ في التخزين المحلي"); return false; } };
+
+// ===================== التخزين =====================
+// حفظ كل الصفوف
+function saveData(rows) { lsSet(STORAGE_KEY, JSON.stringify(rows)); }
+// تحميل الصفوف مرتبة بالتاريخ
+function loadData() {
+  const raw = lsGet(STORAGE_KEY);
+  try { const d = raw ? JSON.parse(raw) : []; return Array.isArray(d) ? d.sort((a, b) => new Date(a.date) - new Date(b.date)) : []; }
+  catch (e) { return []; }
+}
+// إضافة صف جديد مع منع تكرار التاريخ
+function addRow(row) {
+  const data = loadData();
+  if (data.some(r => r.date === row.date)) { toast("يوجد صف بهذا التاريخ مسبقاً"); return false; }
+  data.push(row);
+  data.sort((a, b) => new Date(a.date) - new Date(b.date));
+  saveData(data);
+  return true;
+}
+// الإعدادات مع دمج القيم الافتراضية
+const loadSettings = () => {
+  try {
+    const s = JSON.parse(lsGet(SETTINGS_KEY) || "{}");
+    const d = clone(DEFAULT_SETTINGS);
+    return { ...d, ...s, coeffs: { ...d.coeffs, ...(s.coeffs || {}) }, fvInputs: { ...d.fvInputs, ...(s.fvInputs || {}) } };
+  } catch (e) { return clone(DEFAULT_SETTINGS); }
+};
+const saveSettings = (s) => lsSet(SETTINGS_KEY, JSON.stringify(s));
+const loadLive = () => { try { return JSON.parse(lsGet(LIVE_KEY) || "null"); } catch (e) { return null; } };
+const saveLive = (l) => lsSet(LIVE_KEY, JSON.stringify(l));
+
+// ===================== الرياضيات =====================
+// تقلب EWMA (RiskMetrics) — التهيئة بمتوسط مربعات أول 5 عوائد (أو أقل إن لم تتوفر)
+function ewmaSigma(returns, lambda = 0.94) {
+  if (!returns.length) return DEFAULT_SIGMA;
+  const k = Math.min(5, returns.length);
+  let variance = returns.slice(0, k).reduce((s, r) => s + r * r, 0) / k;
+  for (let i = k; i < returns.length; i++) {
+    variance = lambda * variance + (1 - lambda) * returns[i] * returns[i];
+  }
+  return Math.sqrt(variance);
+}
+
+// النسبة المئوية بالاستيفاء الخطي على مصفوفة مرتبة
+function percentile(sortedArr, q) {
+  const pos = (sortedArr.length - 1) * q;
+  const base = Math.floor(pos);
+  const rest = pos - base;
+  if (sortedArr[base + 1] !== undefined) {
+    return sortedArr[base] + rest * (sortedArr[base + 1] - sortedArr[base]);
+  }
+  return sortedArr[base];
+}
+
+// متغير طبيعي معياري (Box–Muller)
+let spareNormal = null;
+const randNormal = () => {
+  if (spareNormal !== null) { const s = spareNormal; spareNormal = null; return s; }
+  let u = 0, v = 0;
+  while (u === 0) u = Math.random();
+  while (v === 0) v = Math.random();
+  const r = Math.sqrt(-2 * Math.log(u)), th = 2 * Math.PI * v;
+  spareNormal = r * Math.sin(th);
+  return r * Math.cos(th);
+};
+
+// متغير Gamma(shape, 1) بطريقة Marsaglia–Tsang
+const randGamma = (shape) => {
+  if (shape < 1) return randGamma(shape + 1) * Math.pow(Math.random(), 1 / shape);
+  const d = shape - 1 / 3, c = 1 / Math.sqrt(9 * d);
+  for (;;) {
+    let x, v;
+    do { x = randNormal(); v = 1 + c * x; } while (v <= 0);
+    v = v * v * v;
+    const u = Math.random();
+    if (u < 1 - 0.0331 * x ** 4) return d * v;
+    if (Math.log(u) < 0.5 * x * x + d * (1 - v + Math.log(v))) return d * v;
+  }
+};
+
+// متغير Student-t بدرجات حرية nu (يدعم القيم غير الصحيحة)
+const studentT = (nu) => randNormal() / Math.sqrt((2 * randGamma(nu / 2)) / nu);
+
+// محاكاة Monte Carlo ليوم واحد بتوزيع t ذي ذيول سميكة، مع توحيد التباين
+function monteCarlo(S0, sigma, mu = 0.0002, nu = 5, N = 10000) {
+  const nuSafe = Math.max(2.1, nu);
+  const scale = Math.sqrt(nuSafe / (nuSafe - 2));
+  const results = new Array(N);
+  for (let i = 0; i < N; i++) {
+    const z = studentT(nuSafe) / scale;
+    results[i] = S0 * Math.exp((mu - 0.5 * sigma * sigma) + sigma * z);
+  }
+  results.sort((a, b) => a - b);
+  return {
+    p5: percentile(results, 0.05), p10: percentile(results, 0.10), p50: percentile(results, 0.50),
+    p90: percentile(results, 0.90), p95: percentile(results, 0.95), all: results
+  };
+}
+
+// كمّيات t المعيارية (مخزنة مؤقتاً لكل nu) للاختبار الرجعي السريع
+const tQuantCache = {};
+const tQuantiles = (nu) => {
+  const key = String(nu);
+  if (tQuantCache[key]) return tQuantCache[key];
+  const nuSafe = Math.max(2.1, nu), scale = Math.sqrt(nuSafe / (nuSafe - 2));
+  const s = Array.from({ length: 60000 }, () => studentT(nuSafe) / scale).sort((a, b) => a - b);
+  const q = { q05: percentile(s, 0.05), q10: percentile(s, 0.10), q90: percentile(s, 0.90), q95: percentile(s, 0.95) };
+  tQuantCache[key] = q;
+  return q;
+};
+const bandAt = (S0, sigma, mu, z) => S0 * Math.exp((mu - 0.5 * sigma * sigma) + sigma * z);
+
+// نموذج القيمة العادلة (انحدار خطي)
+function fairValue(realYield, dxy, cbFlows, geoIndex, coeffs) {
+  return coeffs.alpha + coeffs.beta1 * realYield + coeffs.beta2 * dxy + coeffs.beta3 * cbFlows + coeffs.beta4 * geoIndex;
+}
+
+// تحويل سعر الأونصة بالدولار إلى سعر الجرام المحلي لعيار معين
+function localPrice(goldUsdPerOz, fxRate, karat, premium) {
+  const gramUsd = goldUsdPerOz / OUNCE_TO_GRAM;
+  return gramUsd * fxRate * (karat / 24) + premium;
+}
+
+// العوائد اللوغاريتمية من صفوف البيانات
+const logReturns = (rows) => {
+  const out = [];
+  for (let i = 1; i < rows.length; i++) {
+    const a = +rows[i - 1].gold, b = +rows[i].gold;
+    if (a > 0 && b > 0) out.push(Math.log(b / a));
+  }
+  return out;
+};
+
+// تقدير sigma الحالي مع معالجة نقص البيانات
+const estimateSigma = (rows, settings) => {
+  if (rows.length < 5) return { sigma: DEFAULT_SIGMA * settings.sigmaMult, raw: DEFAULT_SIGMA, isDefault: true, n: Math.max(0, rows.length - 1) };
+  const rets = logReturns(rows).slice(-30);
+  const raw = ewmaSigma(rets, settings.lambda);
+  return { sigma: raw * settings.sigmaMult, raw, isDefault: false, n: rets.length };
+};
+
+// تصنيف نسبة العدالة
+const classifyFairness = (ratio) => {
+  if (!isFinite(ratio)) return { key: "na", label: "غير متاح", color: "var(--neutral)", icon: "–" };
+  if (ratio > 1.15) return { key: "over", label: "مبالغ فيه", color: "var(--bad)", icon: "▲" };
+  if (ratio < 0.85) return { key: "under", label: "أقل من قيمته", color: "var(--good)", icon: "▼" };
+  return { key: "fair", label: "عادل", color: "var(--neutral)", icon: "●" };
+};
+
+// دوال مساعدة لاختبار Christoffersen
+const xlogy = (x, y) => (x === 0 ? 0 : x * Math.log(y));
+const erfc = (x) => { // تقريب Numerical Recipes
+  const z = Math.abs(x), t = 1 / (1 + 0.5 * z);
+  const r = t * Math.exp(-z * z - 1.26551223 + t * (1.00002368 + t * (0.37409196 + t * (0.09678418 + t * (-0.18628806 +
+    t * (0.27886807 + t * (-1.13520398 + t * (1.48851587 + t * (-0.82215223 + t * 0.17087277)))))))));
+  return x >= 0 ? r : 2 - r;
+};
+const chi2p1 = (x) => (x <= 0 ? 1 : erfc(Math.sqrt(x / 2)));
+const chi2p2 = (x) => (x <= 0 ? 1 : Math.exp(-x / 2));
+
+// ===================== الحالة =====================
+const state = { settings: loadSettings(), mc: null, sigmaInfo: null, S0: null, fx: null, backtest: null, charts: {} };
+
+// السعر المرجعي الحالي: السعر الحي إذا كان أحدث من آخر صف
+const currentRef = () => {
+  const rows = loadData(), live = loadLive(), last = rows[rows.length - 1];
+  const liveDate = live && live.updatedAt ? live.updatedAt.slice(0, 10) : null;
+  const useLive = live && live.price && (!last || (liveDate && liveDate >= last.date));
+  const price = useLive ? live.price : (last ? +last.gold : null);
+  const sar = (useLive && live.sar) || (last && +last.sar) || null;
+  const egp = (useLive && live.egp) || (last && +last.egp) || null;
+  // السعر السابق لحساب التغير اليومي
+  let prev = null;
+  if (useLive && last) prev = (liveDate === last.date) ? (rows.length > 1 ? +rows[rows.length - 2].gold : null) : +last.gold;
+  else if (rows.length > 1) prev = +rows[rows.length - 2].gold;
+  return { price, prev, sar, egp, source: useLive ? "live" : (last ? "data" : "none"), live, last, rows };
+};
+
+// ===================== الجلب من الشبكة =====================
+// محاولة الاتصال المباشر ثم عبر CORS proxy احتياطي
+async function fetchWithProxy(url, { timeout = 8000, as = "json", proxyFirst = false } = {}) {
+  const attempts = proxyFirst ? CORS_PROXIES.map(p => p(url)) : [url, ...CORS_PROXIES.map(p => p(url))];
+  let lastErr = null;
+  for (const u of attempts) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), timeout);
+    try {
+      const res = await fetch(u, { signal: ctrl.signal, cache: "no-store" });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      const text = await res.text();
+      clearTimeout(timer);
+      return as === "json" ? JSON.parse(text) : text;
+    } catch (e) { clearTimeout(timer); lastErr = e; }
+  }
+  throw lastErr || new Error("fetch failed");
+}
+
+// استخراج سعر معقول من JSON غير معروف البنية (للمصدر الاحتياطي)
+const extractPrice = (obj) => {
+  const keys = ["price", "spot", "xau", "XAU", "ask", "bid", "value", "last", "close"];
+  const seen = new Set();
+  const walk = (o, depth) => {
+    if (!o || typeof o !== "object" || depth > 4 || seen.has(o)) return null;
+    seen.add(o);
+    for (const k of keys) {
+      const v = parseFloat(o[k]);
+      if (isFinite(v) && v > 300 && v < 50000) return v;
+    }
+    for (const v of Object.values(o)) { const r = walk(v, depth + 1); if (r) return r; }
+    return null;
+  };
+  return walk(obj, 0);
+};
+
+// جلب سعر الذهب: المصدر الأساسي ثم الاحتياطي
+const fetchGold = async () => {
+  try {
+    const d = await fetchWithProxy("https://api.gold-api.com/price/XAU");
+    const p = parseFloat(d.price);
+    if (isFinite(p) && p > 0) return { price: p, updatedAt: d.updatedAt || new Date().toISOString(), source: "gold-api.com" };
+    throw new Error("bad payload");
+  } catch (e1) {
+    const d = await fetchWithProxy("https://xaus.com/api/v1/spot");
+    const p = extractPrice(d);
+    if (!p) throw new Error("xaus payload");
+    return { price: p, updatedAt: d.updatedAt || d.timestamp || new Date().toISOString(), source: "xaus.com" };
+  }
+};
+
+// جلب أسعار الصرف SAR وEGP مقابل الدولار
+const fetchFX = async () => {
+  try {
+    const d = await fetchWithProxy("https://api.frankfurter.dev/v2/rates?base=USD&quotes=SAR,EGP");
+    const out = {};
+    const list = Array.isArray(d) ? d : (Array.isArray(d.rates) ? d.rates : null);
+    if (list) list.forEach(r => { if (r.quote) out[r.quote] = parseFloat(r.rate); });
+    else if (d.rates) Object.assign(out, d.rates);
+    if (!(out.SAR > 0 && out.EGP > 0)) throw new Error("fx payload");
+    return { sar: +out.SAR, egp: +out.EGP, source: "frankfurter" };
+  } catch (e) {
+    const d = await fetchWithProxy("https://open.er-api.com/v6/latest/USD");
+    if (!(d.rates && d.rates.SAR && d.rates.EGP)) throw new Error("fx fallback");
+    return { sar: +d.rates.SAR, egp: +d.rates.EGP, source: "open.er-api.com" };
+  }
+};
+
+// آخر قيمة رقمية من CSV الخاص بـ FRED
+const fetchFredLast = async (id) => {
+  const url = "https://fred.stlouisfed.org/graph/fredgraph.csv?id=" + id;
+  const text = await fetchWithProxy(url, { as: "text", proxyFirst: true, timeout: 12000 });
+  const lines = text.trim().split(/\r?\n/).slice(1).reverse();
+  for (const l of lines) { const v = parseFloat(l.split(",")[1]); if (isFinite(v)) return { value: v, date: l.split(",")[0] }; }
+  throw new Error("no data");
+};
+
+// تنفيذ الجلب الحي وتحديث الحالة مع الرجوع لآخر سعر معروف عند الفشل
+const fetchLiveNow = async () => {
+  const msg = (t) => { $("fetchMsg").textContent = t; $("liveStatus").textContent = t; };
+  msg("جاري الجلب...");
+  const prevLive = loadLive() || {};
+  let gold = null, fx = null, goldErr = null;
+  const [g, f] = await Promise.allSettled([fetchGold(), fetchFX()]);
+  if (g.status === "fulfilled") gold = g.value; else goldErr = g.reason;
+  if (f.status === "fulfilled") fx = f.value;
+
+  if (gold) {
+    const live = { price: gold.price, updatedAt: gold.updatedAt, source: gold.source,
+      sar: fx ? fx.sar : prevLive.sar, egp: fx ? fx.egp : prevLive.egp, fxSource: fx ? fx.source : (prevLive.fxSource || null), fetchedAt: new Date().toISOString() };
+    saveLive(live);
+    $("fDate").value = todayISO();
+    $("fGold").value = gold.price.toFixed(2);
+    if (live.sar) $("fSar").value = (+live.sar).toFixed(4);
+    if (live.egp) $("fEgp").value = (+live.egp).toFixed(4);
+    const last = loadData().slice(-1)[0];
+    if (last) { if (!$("fRy").value && last.realYield !== null && last.realYield !== undefined) $("fRy").value = last.realYield; if (!$("fDxy").value && last.dxy !== null && last.dxy !== undefined) $("fDxy").value = last.dxy; }
+    msg(`تم: ${fmt(gold.price)} $ من ${gold.source}${fx ? "" : " — تعذر جلب الصرف، استُخدم آخر سعر معروف"}`);
+    state.liveError = null;
+  } else {
+    const rows = loadData(), last = rows[rows.length - 1];
+    const known = prevLive.price ? `${fmt(prevLive.price)} $ بتاريخ ${String(prevLive.updatedAt || "").slice(0, 10)}` :
+      (last ? `${fmt(+last.gold)} $ بتاريخ ${last.date}` : null);
+    state.liveError = known ? `تعذر الاتصال بمصادر السعر — يُستخدم آخر سعر معروف: ${known}` : "تعذر الاتصال بمصادر السعر ولا يوجد سعر مخزن.";
+    msg("فشل الجلب");
+    console.warn("gold fetch failed", goldErr);
+  }
+  refreshAll(true);
+};
+
+// ===================== الحسابات المركبة =====================
+// تشغيل المحاكاة وتحديث الحالة
+const runSimulation = () => {
+  const ref = currentRef(), s = state.settings;
+  state.sigmaInfo = estimateSigma(ref.rows, s);
+  state.S0 = ref.price; state.fx = { sar: ref.sar, egp: ref.egp };
+  if (!ref.price) { state.mc = null; return; }
+  const t0 = performance.now();
+  state.mc = monteCarlo(ref.price, state.sigmaInfo.sigma, s.mu, s.nu, Math.round(s.nSims));
+  state.mcMs = performance.now() - t0;
+  state.mcAt = new Date();
+};
+
+// القيمة العادلة ونسبة العدالة الحالية
+const currentFair = () => {
+  const s = state.settings, v = s.fvInputs;
+  const fv = fairValue(+v.realYield, +v.dxy, +v.cbFlows, +v.geoIndex, s.coeffs);
+  const price = state.S0;
+  const ratio = (price && fv > 0) ? price / fv : NaN;
+  return { fv, ratio, cls: classifyFairness(ratio) };
+};
+
+// إشارة التداول: تجمع العدالة + موقع السعر من نطاقات تنبؤ الأمس + الانحياز
+const tradingSignal = () => {
+  const reasons = []; let score = 0;
+  const fair = currentFair();
+  if (isFinite(fair.ratio)) {
+    if (fair.ratio < 0.85) { score += 1; reasons.push(`نسبة العدالة ${fair.ratio.toFixed(3)} — أقل من قيمته (+1)`); }
+    else if (fair.ratio > 1.15) { score -= 1; reasons.push(`نسبة العدالة ${fair.ratio.toFixed(3)} — مبالغ فيه (−1)`); }
+    else if (fair.ratio < 0.95) { score += 0.5; reasons.push(`نسبة العدالة ${fair.ratio.toFixed(3)} — عادل مع ميل للرخص (+0.5)`); }
+    else if (fair.ratio > 1.05) { score -= 0.5; reasons.push(`نسبة العدالة ${fair.ratio.toFixed(3)} — عادل مع ميل للغلاء (−0.5)`); }
+    else reasons.push(`نسبة العدالة ${fair.ratio.toFixed(3)} — ضمن النطاق العادل (0)`);
+  } else reasons.push("القيمة العادلة غير متاحة");
+
+  // موقع السعر الحالي من نطاق التنبؤ المبني على إغلاق اليوم السابق
+  const ref = currentRef(), s = state.settings;
+  if (ref.price && ref.prev) {
+    const rowsForPrev = ref.source === "live" && ref.live && ref.last && ref.live.updatedAt.slice(0, 10) !== ref.last.date ? ref.rows : ref.rows.slice(0, -1);
+    const sg = estimateSigma(rowsForPrev, s).sigma;
+    const q = tQuantiles(s.nu);
+    const b = { p5: bandAt(ref.prev, sg, BASE_MU, q.q05), p10: bandAt(ref.prev, sg, BASE_MU, q.q10), p90: bandAt(ref.prev, sg, BASE_MU, q.q90), p95: bandAt(ref.prev, sg, BASE_MU, q.q95) };
+    if (ref.price > b.p95) { score -= 1; reasons.push(`السعر فوق P95 لنطاق الأمس (${fmt(b.p95)}) — تمدد مفرط (−1)`); }
+    else if (ref.price > b.p90) { score -= 0.5; reasons.push(`السعر فوق P90 لنطاق الأمس (${fmt(b.p90)}) (−0.5)`); }
+    else if (ref.price < b.p5) { score += 1; reasons.push(`السعر تحت P5 لنطاق الأمس (${fmt(b.p5)}) — هبوط مفرط (+1)`); }
+    else if (ref.price < b.p10) { score += 0.5; reasons.push(`السعر تحت P10 لنطاق الأمس (${fmt(b.p10)}) (+0.5)`); }
+    else reasons.push(`السعر داخل نطاق ثقة 80% للأمس (${fmt(b.p10)} – ${fmt(b.p90)}) (0)`);
+  } else reasons.push("لا يوجد سعر سابق لتقييم الموقع من النطاقات");
+
+  if (Math.abs(s.mu) >= 0.001) {
+    const m = s.mu > 0 ? 0.5 : -0.5; score += m;
+    reasons.push(`انحياز mu يدوي ${s.mu > 0 ? "صاعد" : "هابط"} (${m > 0 ? "+" : "−"}0.5)`);
+  }
+  let sig;
+  if (score >= 1) sig = { label: "شراء", en: "BUY", color: "var(--good)", icon: "▲" };
+  else if (score <= -1) sig = { label: "بيع", en: "SELL", color: "var(--bad)", icon: "▼" };
+  else sig = { label: "حياد", en: "HOLD", color: "var(--neutral)", icon: "●" };
+  return { ...sig, score, reasons };
+};
+
+// الاختبار الرجعي: بناء نطاق P10–P90 لكل يوم من بيانات اليوم السابق فقط
+const runBacktest = (mult = state.settings.sigmaMult) => {
+  const rows = loadData(), s = state.settings;
+  const r = logReturns(rows);
+  const q = tQuantiles(s.nu);
+  const points = [];
+  // r[i] هو العائد من الصف i إلى i+1؛ لتوقع الصف t نستخدم العوائد حتى r[t-2]
+  for (let t = 6; t < rows.length; t++) {
+    const hist = r.slice(Math.max(0, t - 1 - 30), t - 1);
+    if (hist.length < 5) continue;
+    const sg = ewmaSigma(hist, s.lambda) * mult;
+    const S0 = +rows[t - 1].gold, St = +rows[t].gold;
+    const lo = bandAt(S0, sg, BASE_MU, q.q10), hi = bandAt(S0, sg, BASE_MU, q.q90);
+    points.push({ date: rows[t].date, price: St, lo, hi, hit: St < lo || St > hi ? 1 : 0, below: St < lo, above: St > hi });
+  }
+  return points;
+};
+
+// ===================== الرسوم البيانية =====================
+const chartDefaults = () => {
+  if (!window.Chart) return;
+  Chart.defaults.font.family = "'IBM Plex Sans Arabic', system-ui, sans-serif";
+  Chart.defaults.color = cssVar("--ink-2");
+  Chart.defaults.borderColor = cssVar("--grid");
+};
+const destroyChart = (k) => { if (state.charts[k]) { state.charts[k].destroy(); delete state.charts[k]; } };
+const baseTooltip = () => ({ backgroundColor: cssVar("--ink"), titleColor: cssVar("--surface"), bodyColor: cssVar("--surface"), rtl: true, textDirection: "rtl", padding: 10, displayColors: true });
+
+// رسم خطي لآخر 30 يوماً
+const renderHistoryChart = () => {
+  destroyChart("history");
+  const rows = loadData().slice(-30);
+  $("historyEmpty").classList.toggle("hidden", rows.length > 0);
+  if (!window.Chart || !rows.length) return;
+  const gold = cssVar("--gold");
+  state.charts.history = new Chart($("chartHistory"), {
+    type: "line",
+    data: { labels: rows.map(r => r.date.slice(5)), datasets: [{ label: "السعر العالمي $/oz", data: rows.map(r => +r.gold), borderColor: gold, backgroundColor: gold, borderWidth: 2, pointRadius: 0, pointHoverRadius: 5, tension: 0.2 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false, interaction: { mode: "index", intersect: false },
+      plugins: { legend: { display: false }, tooltip: { ...baseTooltip(), callbacks: { title: (it) => rows[it[0].dataIndex].date, label: (c) => ` ${fmt(c.parsed.y)} $` } } },
+      scales: { x: { reverse: true, grid: { display: false }, ticks: { maxTicksLimit: 8 } }, y: { position: "right", grid: { color: cssVar("--grid") }, ticks: { callback: (v) => fmt(v, 0) } } }
+    }
+  });
+};
+
+// Box Plot أفقي بأعمدة عائمة للنطاقات
+const renderBoxChart = () => {
+  destroyChart("box"); destroyChart("hist");
+  const mc = state.mc;
+  if (!window.Chart || !mc) return;
+  const span = mc.p95 - mc.p5, eps = span * 0.004;
+  state.charts.box = new Chart($("chartBox"), {
+    type: "bar",
+    data: {
+      labels: ["السعر العالمي"],
+      datasets: [
+        { order: 4, label: "نطاق ثقة 90% (P5–P95)", data: [[mc.p5, mc.p95]], backgroundColor: cssVar("--gold-band-90"), borderRadius: 4, barPercentage: 0.9, categoryPercentage: 0.9, borderSkipped: false },
+        { order: 3, label: "نطاق ثقة 80% (P10–P90)", data: [[mc.p10, mc.p90]], backgroundColor: cssVar("--gold-band-80"), borderRadius: 4, barPercentage: 0.6, categoryPercentage: 0.9, borderSkipped: false },
+        { order: 2, label: "الوسيط P50", data: [[mc.p50 - eps, mc.p50 + eps]], backgroundColor: cssVar("--gold-mid"), barPercentage: 0.9, categoryPercentage: 0.9, borderSkipped: false },
+        { order: 1, type: "scatter", label: "السعر الحالي", data: [{ x: state.S0, y: "السعر العالمي" }], pointStyle: "rectRot", pointRadius: 7, pointHoverRadius: 9, backgroundColor: cssVar("--ink"), borderColor: cssVar("--surface"), borderWidth: 2 }
+      ]
+    },
+    options: {
+      indexAxis: "y", responsive: true, maintainAspectRatio: false,
+      datasets: { bar: { grouped: false } },
+      plugins: {
+        legend: { position: "bottom", labels: { boxWidth: 12, usePointStyle: true } },
+        tooltip: { ...baseTooltip(), callbacks: { label: (c) => {
+          const v = c.raw; if (Array.isArray(v)) return c.dataset.label.startsWith("الوسيط") ? ` P50: ${fmt(mc.p50)}` : ` ${c.dataset.label}: ${fmt(v[0])} – ${fmt(v[1])}`;
+          return ` السعر الحالي: ${fmt(state.S0)}`; } } }
+      },
+      scales: { x: { min: mc.p5 - span * 0.15, max: mc.p95 + span * 0.15, reverse: true, ticks: { callback: (v) => fmt(v, 0) }, grid: { color: cssVar("--grid") } }, y: { grid: { display: false } } }
+    }
+  });
+
+  // مدرج تكراري للسيناريوهات
+  const bins = 40, lo = percentile(mc.all, 0.005), hi = percentile(mc.all, 0.995), w = (hi - lo) / bins;
+  const counts = new Array(bins).fill(0);
+  mc.all.forEach(x => { const i = Math.floor((x - lo) / w); if (i >= 0 && i < bins) counts[i]++; });
+  const centers = counts.map((_, i) => lo + (i + 0.5) * w);
+  const colors = centers.map(c => (c >= mc.p10 && c <= mc.p90) ? cssVar("--gold-band-80") : cssVar("--gold-band-90"));
+  state.charts.hist = new Chart($("chartHist"), {
+    type: "bar",
+    data: { labels: centers.map(c => fmt(c, 0)), datasets: [{ label: "عدد السيناريوهات", data: counts, backgroundColor: colors, borderRadius: 2, barPercentage: 1, categoryPercentage: 0.92 }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { ...baseTooltip(), callbacks: { title: (it) => `≈ ${it[0].label} $`, label: (c) => ` ${c.parsed.y} سيناريو (${pct(c.parsed.y / mc.all.length)})` } } },
+      scales: { x: { reverse: true, grid: { display: false }, ticks: { maxTicksLimit: 6 } }, y: { display: false } } }
+  });
+};
+
+// رسم الاختبار الرجعي: السعر الفعلي مع نطاق 80% والاختراقات
+const renderBacktestChart = (pts) => {
+  destroyChart("bt");
+  if (!window.Chart || !pts.length) return;
+  $("btChartWrap").classList.remove("hidden");
+  const band = cssVar("--gold-band-90");
+  state.charts.bt = new Chart($("chartBacktest"), {
+    type: "line",
+    data: { labels: pts.map(p => p.date), datasets: [
+      { order: 3, label: "P90", data: pts.map(p => p.hi), borderColor: band, backgroundColor: band, borderWidth: 1, pointRadius: 0, fill: "+1" },
+      { order: 2, label: "P10", data: pts.map(p => p.lo), borderColor: band, backgroundColor: band, borderWidth: 1, pointRadius: 0, fill: false },
+      { order: 1, label: "السعر الفعلي", data: pts.map(p => p.price), borderColor: cssVar("--gold"), borderWidth: 2, tension: 0.15,
+        pointRadius: pts.map(p => p.hit ? 5 : 0), pointBackgroundColor: pts.map(p => p.hit ? cssVar("--bad") : cssVar("--gold")), pointBorderColor: cssVar("--surface"), pointBorderWidth: 2 }
+    ] },
+    options: { responsive: true, maintainAspectRatio: false, interaction: { mode: "index", intersect: false },
+      plugins: { legend: { position: "bottom", labels: { boxWidth: 12 } }, tooltip: { ...baseTooltip(), callbacks: { label: (c) => ` ${c.dataset.label}: ${fmt(c.parsed.y)}`, afterBody: (it) => pts[it[0].dataIndex].hit ? "اختراق للنطاق" : "" } } },
+      scales: { x: { reverse: true, grid: { display: false }, ticks: { maxTicksLimit: 8 } }, y: { position: "right", ticks: { callback: (v) => fmt(v, 0) } } } }
+  });
+};
+
+// ===================== العرض =====================
+const kpiCard = (title, value, unit, sub, subColor) => `
+  <div class="card p-4">
+    <div class="text-sm muted">${title}</div>
+    <div class="mt-1 text-2xl font-bold"><span class="num">${value}</span> <span class="text-sm faint font-normal">${unit}</span></div>
+    <div class="text-xs mt-1" style="color:${subColor || "var(--ink-3)"}">${sub || "&nbsp;"}</div>
+  </div>`;
+
+// التحذيرات العامة أعلى الصفحة
+const renderBanners = () => {
+  const out = [], ref = currentRef();
+  if (state.sigmaInfo && state.sigmaInfo.isDefault) out.push(`<div class="banner banner-warn">⚠ بيانات غير كافية — sigma افتراضي (1.2% يومياً). أضف 5 صفوف على الأقل لحساب تقلب EWMA الفعلي.</div>`);
+  if (state.liveError) out.push(`<div class="banner banner-warn">⚠ ${state.liveError}</div>`);
+  else if (ref.source === "data" && ref.last) out.push(`<div class="banner banner-info">ℹ يُعرض آخر سعر معروف بتاريخ ${ref.last.date} من البيانات المخزنة. اضغط "جلب السعر" للتحديث.</div>`);
+  if (ref.source === "none") out.push(`<div class="banner banner-info">ℹ لا يوجد سعر بعد. اضغط "جلب السعر" أو أضف بيانات من تبويب البيانات (يمكنك تجربة "بيانات تجريبية").</div>`);
+  if (!ref.sar || !ref.egp) { if (ref.source !== "none") out.push(`<div class="banner banner-warn">⚠ أسعار الصرف غير متاحة — لن تظهر الأسعار المحلية.</div>`); }
+  $("banners").innerHTML = out.join("");
+};
+
+// لوحة التحكم
+const renderDashboard = () => {
+  const ref = currentRef(), s = state.settings;
+  const chg = (ref.price && ref.prev) ? ref.price / ref.prev - 1 : null;
+  const chgTxt = chg === null ? "لا يوجد سعر سابق للمقارنة" : `${chg >= 0 ? "▲" : "▼"} ${pct(Math.abs(chg), 2)} اليوم`;
+  const chgColor = chg === null ? null : (chg >= 0 ? "var(--good)" : "var(--bad)");
+  const lp = (fx, k, prem) => (ref.price && fx) ? fmt(localPrice(ref.price, fx, k, prem)) : "—";
+  const srcTxt = ref.source === "live" ? `حي · ${ref.live.source} · ${String(ref.live.updatedAt).replace("T", " ").slice(0, 16)}` : (ref.last ? `آخر سعر معروف · ${ref.last.date}` : "");
+  $("kpis").innerHTML =
+    kpiCard("السعر العالمي (أونصة)", ref.price ? fmt(ref.price) : "—", "USD", `<span style="color:${chgColor || "var(--ink-3)"}">${chgTxt}</span> <span class="faint">· ${srcTxt}</span>`) +
+    kpiCard("عيار 24 — السعودية", lp(ref.sar, 24, s.premiumSA), "ريال/جرام", ref.sar ? `صرف ${fmt(ref.sar, 4)} · مصنعية ${fmt(s.premiumSA)}` : "") +
+    kpiCard("عيار 22 — السعودية", lp(ref.sar, 22, s.premiumSA), "ريال/جرام", ref.sar ? `صرف ${fmt(ref.sar, 4)} · مصنعية ${fmt(s.premiumSA)}` : "") +
+    kpiCard("عيار 24 — مصر", lp(ref.egp, 24, s.premiumEG), "جنيه/جرام", ref.egp ? `صرف ${fmt(ref.egp, 4)} · مصنعية ${fmt(s.premiumEG)}` : "");
+
+  // بطاقة الإشارة
+  const sig = tradingSignal(), fair = currentFair();
+  $("signalCard").innerHTML = `
+    <div class="text-sm muted">إشارة التداول</div>
+    <div class="flex items-center gap-3 mt-2">
+      <div class="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl" style="background:color-mix(in srgb, ${sig.color} 14%, transparent);color:${sig.color}">${sig.icon}</div>
+      <div><div class="text-3xl font-bold" style="color:${sig.color}">${sig.label}</div><div class="text-xs faint num">${sig.en} · score ${sig.score > 0 ? "+" : ""}${sig.score}</div></div>
+    </div>
+    <ul class="text-xs muted mt-4 space-y-1.5 leading-5 flex-1">${sig.reasons.map(r => `<li>• ${r}</li>`).join("")}</ul>
+    <div class="mt-3 pt-3 border-t text-sm flex justify-between" style="border-color:var(--border)">
+      <span class="muted">نسبة العدالة</span>
+      <span><span class="num font-bold">${isFinite(fair.ratio) ? fair.ratio.toFixed(3) : "—"}</span> <span class="pill" style="color:${fair.cls.color}">${fair.cls.icon} ${fair.cls.label}</span></span>
+    </div>
+    <p class="text-[11px] faint mt-2">مؤشر إحصائي وليس نصيحة استثمارية.</p>`;
+
+  // إحصاءات مصغرة
+  const mc = state.mc, si = state.sigmaInfo;
+  $("miniStats").innerHTML =
+    kpiCard("عيار 22 — مصر", lp(ref.egp, 22, s.premiumEG), "جنيه/جرام", "") +
+    kpiCard("تقلب EWMA اليومي", si ? pct(si.sigma, 2) : "—", "σ", si ? (si.isDefault ? "افتراضي — بيانات غير كافية" : `من ${si.n} عائداً · lambda ${s.lambda}${s.sigmaMult !== 1 ? " · مضاعف " + s.sigmaMult : ""}`) : "", si && si.isDefault ? "var(--warn)" : null) +
+    kpiCard("نطاق ثقة 80% للغد", mc ? `${fmt(mc.p10, 0)} – ${fmt(mc.p90, 0)}` : "—", "USD", mc ? `نطاق ثقة 90%: ${fmt(mc.p5, 0)} – ${fmt(mc.p95, 0)}` : "");
+  renderHistoryChart();
+};
+
+// تبويب التنبؤ
+const renderForecast = () => {
+  const mc = state.mc, s = state.settings;
+  $("inMu").value = s.mu;
+  if (!mc) {
+    $("tblGlobalBands").innerHTML = `<tr><td class="faint">لا يوجد سعر حالي لتشغيل المحاكاة.</td></tr>`;
+    $("tblLocal").innerHTML = ""; $("probStats").innerHTML = ""; $("simMeta").textContent = "";
+    renderBoxChart(); return;
+  }
+  const S0 = state.S0;
+  const rowsP = [["P5", mc.p5, "الحد الأدنى لنطاق ثقة 90%"], ["P10", mc.p10, "الحد الأدنى لنطاق ثقة 80%"], ["P50", mc.p50, "الوسيط"], ["P90", mc.p90, "الحد الأعلى لنطاق ثقة 80%"], ["P95", mc.p95, "الحد الأعلى لنطاق ثقة 90%"]];
+  $("tblGlobalBands").innerHTML = `<thead><tr><th>المئين</th><th>السعر $/oz</th><th>التغير عن الحالي</th><th>الدلالة</th></tr></thead><tbody>` +
+    rowsP.map(([k, v, d]) => `<tr><td class="font-semibold">${k}</td><td><span class="num">${fmt(v)}</span></td><td><span class="num" style="color:${v >= S0 ? "var(--good)" : "var(--bad)"}">${v >= S0 ? "+" : ""}${pct(v / S0 - 1, 2)}</span></td><td class="muted">${d}</td></tr>`).join("") + `</tbody>`;
+
+  const N = mc.all.length;
+  const above90 = mc.all.filter(x => x > mc.p90).length / N, below10 = mc.all.filter(x => x < mc.p10).length / N, up = mc.all.filter(x => x > S0).length / N;
+  const target = num($("inTarget").value);
+  const pTarget = target ? mc.all.filter(x => x > target).length / N : null;
+  const hist = state.backtest;
+  const stat = (t, v, sub) => `<div class="rounded-lg p-3" style="background:var(--page)"><div class="text-xs muted">${t}</div><div class="text-lg font-bold num">${v}</div><div class="text-[11px] faint">${sub || ""}</div></div>`;
+  $("probStats").innerHTML =
+    stat("احتمال تجاوز P90", pct(above90), hist ? `تاريخياً: ${pct(hist.aboveRate)} من الأيام` : "شغّل اختبار التغطية للمعدل التاريخي") +
+    stat("احتمال كسر P10", pct(below10), hist ? `تاريخياً: ${pct(hist.belowRate)} من الأيام` : "≈10% بحكم تعريف النطاق") +
+    stat("احتمال الإغلاق أعلى من الحالي", pct(up), `السعر الحالي ${fmt(S0)}`) +
+    stat("احتمال تجاوز السعر المستهدف", pTarget === null ? "—" : pct(pTarget), target ? `المستهدف ${fmt(target)}` : "أدخل سعراً مستهدفاً");
+
+  const si = state.sigmaInfo;
+  $("simMeta").textContent = `${N.toLocaleString("en-US")} سيناريو · σ=${pct(si.sigma, 2)}${si.isDefault ? " (افتراضي)" : ""} · nu=${s.nu} · mu=${s.mu} · ${state.mcMs ? state.mcMs.toFixed(0) + "ms" : ""}`;
+
+  // جدول التحويل المحلي
+  const fx = state.fx, keys = ["p5", "p10", "p50", "p90", "p95"];
+  const lines = [];
+  if (fx.sar) { [24, 22, 21].forEach(k => lines.push({ c: "السعودية", u: "ريال", k, fx: fx.sar, prem: s.premiumSA })); }
+  if (fx.egp) { [24, 22, 21].forEach(k => lines.push({ c: "مصر", u: "جنيه", k, fx: fx.egp, prem: s.premiumEG })); }
+  $("tblLocal").innerHTML = lines.length ? `<thead><tr><th>البلد</th><th>العيار</th><th>الحالي</th>${keys.map(k => `<th>${k.toUpperCase()}</th>`).join("")}</tr></thead><tbody>` +
+    lines.map(l => `<tr><td>${l.c}</td><td>${l.k}${l.k === 21 ? ' <span class="faint text-xs">(إضافي)</span>' : ""}</td><td class="font-semibold"><span class="num">${fmt(localPrice(S0, l.fx, l.k, l.prem))}</span></td>${keys.map(k => `<td><span class="num">${fmt(localPrice(mc[k], l.fx, l.k, l.prem))}</span></td>`).join("")}</tr>`).join("") + `</tbody>`
+    : `<tr><td class="faint">أسعار الصرف غير متاحة.</td></tr>`;
+  $("localMeta").textContent = `ريال/جرام وجنيه/جرام · صرف الريال ${fmt(fx.sar, 4)} · صرف الجنيه ${fmt(fx.egp, 4)} · المصنعية: السعودية ${fmt(s.premiumSA)}، مصر ${fmt(s.premiumEG)} · يُفترض ثبات سعر الصرف خلال اليوم.`;
+  renderBoxChart();
+};
+
+// تبويب التقييم العادل
+const renderFairInputs = () => {
+  const s = state.settings;
+  const cf = [["alpha", "α (الثابت)"], ["beta1", "β1 العائد الحقيقي"], ["beta2", "β2 مؤشر الدولار"], ["beta3", "β3 تدفقات البنوك المركزية"], ["beta4", "β4 المؤشر الجيوسياسي"]];
+  $("coeffInputs").innerHTML = cf.map(([k, l]) => `<div><label class="lbl">${l}</label><input type="number" step="any" class="inp" data-coeff="${k}" value="${s.coeffs[k]}"></div>`).join("");
+  const vr = [["realYield", "RealYield — العائد الحقيقي 10 سنوات %"], ["dxy", "DXY — مؤشر الدولار"], ["cbFlows", "CB_Flows — مشتريات البنوك المركزية (طن)"], ["geoIndex", "Geo_Index — مؤشر المخاطر الجيوسياسية"]];
+  $("varInputs").innerHTML = vr.map(([k, l]) => `<div><label class="lbl">${l}</label><input type="number" step="any" class="inp" data-fv="${k}" value="${s.fvInputs[k]}"></div>`).join("");
+  document.querySelectorAll("[data-coeff]").forEach(el => el.addEventListener("input", () => { const v = num(el.value); if (v !== null) { state.settings.coeffs[el.dataset.coeff] = v; saveSettings(state.settings); renderFair(); renderDashboard(); } }));
+  document.querySelectorAll("[data-fv]").forEach(el => el.addEventListener("input", () => { const v = num(el.value); if (v !== null) { state.settings.fvInputs[el.dataset.fv] = v; saveSettings(state.settings); renderFair(); renderDashboard(); } }));
+};
+const renderFair = () => {
+  const f = currentFair(), S0 = state.S0;
+  const gap = (S0 && isFinite(f.fv)) ? S0 - f.fv : null;
+  $("fairResult").innerHTML =
+    kpiCard("القيمة العادلة للنموذج", isFinite(f.fv) ? fmt(f.fv) : "—", "USD/oz", f.fv <= 0 ? "قيمة غير منطقية — راجع المعاملات" : "", f.fv <= 0 ? "var(--bad)" : null) +
+    kpiCard("السعر السوقي", S0 ? fmt(S0) : "—", "USD/oz", gap === null ? "" : `الفجوة ${gap >= 0 ? "+" : ""}${fmt(gap)} $ (${pct(gap / f.fv, 1)})`) +
+    `<div class="card p-4"><div class="text-sm muted">نسبة العدالة (السوق ÷ العادلة)</div>
+      <div class="mt-1 text-2xl font-bold num">${isFinite(f.ratio) ? f.ratio.toFixed(3) : "—"}</div>
+      <div class="mt-2"><span class="pill" style="color:${f.cls.color}">${f.cls.icon} ${f.cls.label}</span></div>
+      <div class="text-[11px] faint mt-2">مبالغ فيه &gt; 1.15 · عادل 0.85–1.15 · أقل من قيمته &lt; 0.85</div></div>`;
+};
+
+// جدول البيانات
+const renderDataTable = () => {
+  const rows = loadData();
+  $("rowCount").textContent = `(${rows.length} صف)`;
+  if (!rows.length) { $("tblData").innerHTML = `<tr><td class="faint">لا توجد بيانات مخزنة.</td></tr>`; return; }
+  const f = (v, d) => (v === null || v === undefined || v === "") ? "—" : fmt(+v, d);
+  $("tblData").innerHTML = `<thead><tr><th>التاريخ</th><th>الذهب $/oz</th><th>USD/SAR</th><th>USD/EGP</th><th>العائد الحقيقي</th><th>مؤشر الدولار</th><th>العائد اليومي</th><th></th></tr></thead><tbody>` +
+    rows.map((r, i) => ({ r, ret: i > 0 ? Math.log(+r.gold / +rows[i - 1].gold) : null })).reverse().map(({ r, ret }) =>
+      `<tr><td class="num">${r.date}</td><td><span class="num">${f(r.gold, 2)}</span></td><td><span class="num">${f(r.sar, 4)}</span></td><td><span class="num">${f(r.egp, 4)}</span></td><td><span class="num">${f(r.realYield, 2)}</span></td><td><span class="num">${f(r.dxy, 2)}</span></td>
+      <td><span class="num" style="color:${ret === null ? "var(--ink-3)" : ret >= 0 ? "var(--good)" : "var(--bad)"}">${ret === null ? "—" : (ret >= 0 ? "+" : "") + pct(ret, 2)}</span></td>
+      <td><button class="text-xs btn-danger" data-del="${r.date}" title="حذف">✕</button></td></tr>`).join("") + `</tbody>`;
+  document.querySelectorAll("[data-del]").forEach(b => b.addEventListener("click", () => {
+    if (!confirm(`حذف صف ${b.dataset.del}؟`)) return;
+    saveData(loadData().filter(r => r.date !== b.dataset.del)); refreshAll(true);
+  }));
+};
+
+// تبويب الإعدادات
+const renderSettings = () => {
+  const s = state.settings;
+  $("sPremSA").value = s.premiumSA; $("sPremEG").value = s.premiumEG;
+  $("sLambda").value = s.lambda; $("sNu").value = s.nu; $("sMult").value = s.sigmaMult; $("sN").value = s.nSims;
+};
+
+// تحديث شامل
+const refreshAll = (resim = true) => {
+  if (resim) { runSimulation(); state.backtest = null; $("coverageResult").innerHTML = ""; $("christResult").innerHTML = ""; destroyChart("bt"); $("btChartWrap").classList.add("hidden"); }
+  renderBanners(); renderDashboard(); renderForecast(); renderFair(); renderDataTable(); renderSettings();
+};
+
+// ===================== الاختبارات الإحصائية =====================
+// اختبار التغطية مع اقتراح إعادة المعايرة
+const doCoverage = () => {
+  const pts = runBacktest();
+  if (pts.length < 10) { $("coverageResult").innerHTML = `<div class="banner banner-warn">بيانات غير كافية — يلزم 17 صفاً على الأقل (لديك ${loadData().length}).</div>`; return null; }
+  const n = pts.length, inside = pts.filter(p => !p.hit).length, cov = inside / n;
+  const above = pts.filter(p => p.above).length / n, below = pts.filter(p => p.below).length / n;
+  state.backtest = { pts, cov, aboveRate: above, belowRate: below };
+  const tol = Math.max(0.05, 2 * Math.sqrt(0.16 / n));
+  const far = Math.abs(cov - 0.8) > tol;
+  let suggestion = "";
+  if (far) {
+    // بحث ثنائي عن مضاعف sigma يحقق تغطية ≈ 80%
+    let lo = 0.2, hi = 4;
+    for (let i = 0; i < 30; i++) { const mid = (lo + hi) / 2; const c = runBacktest(mid).filter(p => !p.hit).length / n; if (c < 0.8) lo = mid; else hi = mid; }
+    const k = +(((lo + hi) / 2).toFixed(2));
+    const si = state.sigmaInfo;
+    const newSigma = si ? (si.isDefault ? DEFAULT_SIGMA : si.raw) * k : null;
+    state.suggestMult = k;
+    suggestion = `<div class="mt-2">⚠ أعد معايرة sigma — المضاعف المقترح <b class="num">${k}</b>${newSigma ? ` (sigma مقترح ≈ <b class="num">${pct(newSigma, 2)}</b> يومياً بدلاً من ${pct(si.sigma, 2)})` : ""}.
+      <button class="btn mt-2 sm:mt-0 sm:mr-2" id="btnApplyMult">تطبيق المضاعف المقترح</button></div>`;
+  }
+  $("coverageResult").innerHTML = `<div class="banner ${far ? "banner-warn" : "banner-good"}">
+    <div><b>التغطية الفعلية: <span class="num">${pct(cov)}</span></b> من ${n} يوماً داخل نطاق P10–P90 (المتوقع 80%، هامش القبول ±${pct(tol, 1)}).
+    فوق P90: <span class="num">${pct(above)}</span> · تحت P10: <span class="num">${pct(below)}</span> (المتوقع 10% لكل منهما).</div>
+    ${far ? suggestion : `<div class="mt-1">✓ النموذج معاير جيداً — التغطية قريبة من 80%.</div>`}</div>`;
+  const ap = $("btnApplyMult");
+  if (ap) ap.addEventListener("click", () => { state.settings.sigmaMult = +(state.settings.sigmaMult * state.suggestMult).toFixed(3); saveSettings(state.settings); refreshAll(true); toast(`تم ضبط مضاعف sigma إلى ${state.settings.sigmaMult}`); });
+  renderBacktestChart(pts);
+  renderForecast();
+  return state.backtest;
+};
+
+// اختبار Christoffersen للاستقلالية والتغطية المشروطة
+const doChristoffersen = () => {
+  const bt = state.backtest || doCoverage();
+  if (!bt) { $("christResult").innerHTML = ""; return; }
+  const I = bt.pts.map(p => p.hit), p = 0.2, N = I.length, x = I.reduce((a, b) => a + b, 0);
+  let n00 = 0, n01 = 0, n10 = 0, n11 = 0;
+  for (let i = 1; i < N; i++) { const a = I[i - 1], b = I[i]; if (!a && !b) n00++; else if (!a && b) n01++; else if (a && !b) n10++; else n11++; }
+  const ph = x / N;
+  const LRuc = -2 * ((xlogy(N - x, 1 - p) + xlogy(x, p)) - (xlogy(N - x, 1 - ph) + xlogy(x, ph)));
+  const pi01 = n01 / Math.max(1, n00 + n01), pi11 = n11 / Math.max(1, n10 + n11), pi = (n01 + n11) / Math.max(1, n00 + n01 + n10 + n11);
+  const lnNull = xlogy(n00 + n10, 1 - pi) + xlogy(n01 + n11, pi);
+  const lnAlt = xlogy(n00, 1 - pi01) + xlogy(n01, pi01) + xlogy(n10, 1 - pi11) + xlogy(n11, pi11);
+  const LRind = Math.max(0, -2 * (lnNull - lnAlt));
+  const LRcc = LRuc + LRind;
+  const pInd = chi2p1(LRind), pUc = chi2p1(LRuc), pCc = chi2p2(LRcc);
+  const indOk = pInd > 0.05, ccOk = pCc > 0.05;
+  const noHits = x === 0;
+  $("christResult").innerHTML = `<div class="banner ${noHits ? "banner-warn" : indOk ? "banner-good" : "banner-bad"} mt-2">
+    <div class="font-bold mb-1">اختبار Christoffersen (مستوى معنوية 5%)</div>
+    ${noHits ? "<div>لا توجد اختراقات — لا يمكن اختبار التكتل، والنطاق غالباً واسع أكثر من اللازم.</div>" : ""}
+    <div class="overflow-x-auto"><table class="tbl mt-1" style="color:inherit"><thead><tr><th>الاختبار</th><th>الإحصائية LR</th><th>p-value</th><th>النتيجة</th></tr></thead><tbody>
+      <tr><td>التغطية غير المشروطة (Kupiec)</td><td class="num">${LRuc.toFixed(3)}</td><td class="num">${pUc.toFixed(3)}</td><td>${pUc > 0.05 ? "✓ مقبول" : "✗ مرفوض"}</td></tr>
+      <tr><td>الاستقلالية (عدم التكتل)</td><td class="num">${LRind.toFixed(3)}</td><td class="num">${pInd.toFixed(3)}</td><td>${indOk ? "✓ الاختراقات مستقلة" : "✗ الاختراقات متكتلة"}</td></tr>
+      <tr><td>التغطية المشروطة (مجمّع)</td><td class="num">${LRcc.toFixed(3)}</td><td class="num">${pCc.toFixed(3)}</td><td>${ccOk ? "✓ مقبول" : "✗ مرفوض"}</td></tr>
+    </tbody></table></div>
+    <div class="text-xs mt-1">الانتقالات: n00=${n00} · n01=${n01} · n10=${n10} · n11=${n11} · احتمال اختراق بعد اختراق ${pct(pi11)} مقابل بعد يوم عادي ${pct(pi01)}.
+    ${!indOk && !noHits ? " التكتل يعني أن التقلب يتغير أسرع من EWMA — جرّب خفض lambda (مثلاً 0.90) أو خفض nu." : ""} الاختبار تقريبي ويحتاج 100+ يوم لقوة إحصائية جيدة.</div></div>`;
+};
+
+// ===================== CSV =====================
+const CSV_HEADER = "date,gold_usd_oz,usd_sar,usd_egp,real_yield,dxy";
+const exportCSV = () => {
+  const rows = loadData();
+  if (!rows.length) { toast("لا توجد بيانات للتصدير"); return; }
+  const v = (x) => (x === null || x === undefined) ? "" : x;
+  const csv = [CSV_HEADER, ...rows.map(r => [r.date, r.gold, r.sar, r.egp, v(r.realYield), v(r.dxy)].join(","))].join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = `gold_data_${todayISO()}.csv`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+};
+// تحليل نص CSV إلى صفوف صالحة
+const parseCSV = (text) => {
+  const lines = text.replace(/^﻿/, "").split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  const sep = lines[0] && lines[0].includes(";") && !lines[0].includes(",") ? ";" : ",";
+  const out = []; let bad = 0;
+  lines.forEach((l, idx) => {
+    const c = l.split(sep).map(x => x.trim().replace(/^"|"$/g, ""));
+    if (idx === 0 && isNaN(parseFloat(c[1]))) return; // سطر العناوين
+    const d = new Date(c[0]);
+    const row = { date: isNaN(d) ? null : d.toISOString().slice(0, 10), gold: num(c[1]), sar: num(c[2]), egp: num(c[3]), realYield: num(c[4]), dxy: num(c[5]) };
+    if (row.date && row.gold > 0 && row.sar > 0 && row.egp > 0) out.push(row); else bad++;
+  });
+  return { rows: out, bad };
+};
+const importCSV = (file) => {
+  const reader = new FileReader();
+  reader.onload = () => {
+    const { rows, bad } = parseCSV(String(reader.result));
+    if (!rows.length) { toast("لم يتم العثور على صفوف صالحة في الملف"); return; }
+    const map = new Map(loadData().map(r => [r.date, r]));
+    let added = 0, updated = 0;
+    rows.forEach(r => { if (map.has(r.date)) updated++; else added++; map.set(r.date, r); });
+    saveData([...map.values()].sort((a, b) => new Date(a.date) - new Date(b.date)));
+    toast(`تم الاستيراد: ${added} جديد، ${updated} محدّث${bad ? `، ${bad} صف غير صالح تم تجاهله` : ""}`, 4500);
+    refreshAll(true);
+  };
+  reader.readAsText(file);
+};
+
+// بيانات تجريبية مصطنعة (مسار عشوائي) لتجربة التطبيق فقط
+const makeDemo = () => {
+  const rows = []; let p = 4000, egp = 48.5, ry = 1.8, dxy = 99;
+  const d = new Date(); d.setDate(d.getDate() - 180);
+  while (rows.length < 120) {
+    d.setDate(d.getDate() + 1);
+    if (d.getDay() === 0 || d.getDay() === 6) continue;
+    p *= Math.exp(0.0003 + 0.011 * studentT(5) / Math.sqrt(5 / 3));
+    egp *= Math.exp(0.002 * randNormal()); ry += 0.02 * randNormal(); dxy += 0.3 * randNormal();
+    rows.push({ date: d.toISOString().slice(0, 10), gold: +p.toFixed(2), sar: 3.75, egp: +egp.toFixed(4), realYield: +ry.toFixed(2), dxy: +dxy.toFixed(2) });
+  }
+  return rows;
+};
+
+// ===================== ربط الأحداث =====================
+const setTheme = (dark) => {
+  document.documentElement.classList.toggle("dark", dark);
+  lsSet(THEME_KEY, dark ? "dark" : "light");
+  chartDefaults();
+  renderHistoryChart(); renderBoxChart(); if (state.backtest) renderBacktestChart(state.backtest.pts);
+};
+
+const bind = () => {
+  document.querySelectorAll(".tab-btn").forEach(b => b.addEventListener("click", () => {
+    document.querySelectorAll(".tab-btn").forEach(x => x.classList.toggle("active", x === b));
+    document.querySelectorAll(".tab").forEach(t => t.classList.toggle("hidden", t.id !== "tab-" + b.dataset.tab));
+    try { localStorage.setItem("gold_tab", b.dataset.tab); } catch (e) {}
+    Object.values(state.charts).forEach(c => c.resize());
+  }));
+  $("btnTheme").addEventListener("click", () => setTheme(!document.documentElement.classList.contains("dark")));
+  $("btnFetchHeader").addEventListener("click", fetchLiveNow);
+  $("btnFetchNow").addEventListener("click", fetchLiveNow);
+
+  $("inMu").addEventListener("change", () => { const v = num($("inMu").value); if (v === null || Math.abs(v) > 0.1) { toast("قيمة mu غير صالحة (المدى المعقول ±0.05)"); return; } state.settings.mu = v; saveSettings(state.settings); });
+  $("btnSimulate").addEventListener("click", () => {
+    const v = num($("inMu").value); if (v !== null && Math.abs(v) <= 0.1) { state.settings.mu = v; saveSettings(state.settings); }
+    runSimulation(); renderBanners(); renderForecast(); renderDashboard(); toast("تم تحديث المحاكاة");
+  });
+  $("inTarget").addEventListener("input", renderForecast);
+  $("btnCoverage").addEventListener("click", doCoverage);
+  $("btnChristoffersen").addEventListener("click", doChristoffersen);
+
+  $("rowForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const row = { date: $("fDate").value, gold: num($("fGold").value), sar: num($("fSar").value), egp: num($("fEgp").value), realYield: num($("fRy").value), dxy: num($("fDxy").value) };
+    if (!row.date || !(row.gold > 0) || !(row.sar > 0) || !(row.egp > 0)) { toast("أكمل التاريخ والسعر وأسعار الصرف بقيم موجبة"); return; }
+    const last = loadData().slice(-1)[0];
+    if (last && Math.abs(Math.log(row.gold / +last.gold)) > 0.15 && !confirm("السعر يختلف أكثر من 15% عن آخر صف — هل أنت متأكد؟")) return;
+    if (addRow(row)) { toast("تمت إضافة الصف وحفظه"); $("rowForm").reset(); $("fDate").value = todayISO(); refreshAll(true); }
+  });
+  $("btnExport").addEventListener("click", exportCSV);
+  $("csvFile").addEventListener("change", (e) => { if (e.target.files[0]) importCSV(e.target.files[0]); e.target.value = ""; });
+  $("btnClear").addEventListener("click", () => { if (confirm("مسح كل البيانات المخزنة؟ لا يمكن التراجع (صدّر CSV أولاً).")) { saveData([]); refreshAll(true); toast("تم مسح البيانات"); } });
+  $("btnDemo").addEventListener("click", () => {
+    if (loadData().length && !confirm("سيتم استبدال البيانات الحالية ببيانات تجريبية مصطنعة. متابعة؟")) return;
+    saveData(makeDemo()); refreshAll(true); toast("تم تحميل 120 يوماً من بيانات مصطنعة للتجربة — ليست أسعاراً حقيقية", 4500);
+  });
+
+  $("btnFvFromData").addEventListener("click", () => {
+    const last = loadData().slice(-1)[0];
+    if (!last) { toast("لا توجد بيانات"); return; }
+    if (last.realYield !== null && last.realYield !== undefined) state.settings.fvInputs.realYield = +last.realYield;
+    if (last.dxy !== null && last.dxy !== undefined) state.settings.fvInputs.dxy = +last.dxy;
+    saveSettings(state.settings); renderFairInputs(); renderFair(); renderDashboard(); toast(`تم استخدام قيم ${last.date}`);
+  });
+  $("btnFred").addEventListener("click", async () => {
+    toast("جاري الجلب من FRED عبر proxy...");
+    const [ry, dx] = await Promise.allSettled([fetchFredLast("DFII10"), fetchFredLast("DTWEXBGS")]);
+    const msgs = [];
+    if (ry.status === "fulfilled") { state.settings.fvInputs.realYield = ry.value.value; msgs.push(`DFII10=${ry.value.value} (${ry.value.date})`); }
+    if (dx.status === "fulfilled") { state.settings.fvInputs.dxy = dx.value.value; msgs.push(`DTWEXBGS=${dx.value.value} (${dx.value.date})`); }
+    saveSettings(state.settings); renderFairInputs(); renderFair(); renderDashboard();
+    toast(msgs.length ? "تم: " + msgs.join(" · ") : "تعذر الجلب من FRED — أدخل القيم يدوياً", 5000);
+  });
+
+  $("btnSaveSettings").addEventListener("click", () => {
+    const s = state.settings;
+    const g = (id, def, ok) => { const v = num($(id).value); return (v !== null && ok(v)) ? v : def; };
+    s.premiumSA = g("sPremSA", s.premiumSA, v => v >= 0); s.premiumEG = g("sPremEG", s.premiumEG, v => v >= 0);
+    s.lambda = g("sLambda", s.lambda, v => v > 0.5 && v < 1); s.nu = g("sNu", s.nu, v => v > 2);
+    s.sigmaMult = g("sMult", s.sigmaMult, v => v > 0.05 && v < 10); s.nSims = Math.round(g("sN", s.nSims, v => v >= 1000 && v <= 100000));
+    saveSettings(s); refreshAll(true); toast("تم حفظ الإعدادات وإعادة المحاكاة");
+  });
+  $("btnResetModel").addEventListener("click", () => {
+    if (!confirm("إعادة كل المعاملات والإعدادات للقيم الافتراضية؟ (البيانات لن تُحذف)")) return;
+    state.settings = clone(DEFAULT_SETTINGS); saveSettings(state.settings); renderFairInputs(); refreshAll(true); toast("تمت إعادة تعيين النموذج");
+  });
+};
+
+// ===================== التشغيل =====================
+const init = () => {
+  const savedTheme = lsGet(THEME_KEY);
+  const dark = savedTheme ? savedTheme === "dark" : window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+  document.documentElement.classList.toggle("dark", !!dark);
+  chartDefaults();
+  if (!window.Chart) toast("تعذر تحميل Chart.js — الرسوم غير متاحة (تحقق من الاتصال)", 5000);
+  $("fDate").value = todayISO();
+  bind();
+  renderFairInputs();
+  refreshAll(true);
+  const tab = lsGet("gold_tab");
+  if (tab) { const b = document.querySelector(`.tab-btn[data-tab="${tab}"]`); if (b) b.click(); }
+  const live = loadLive();
+  $("liveStatus").textContent = live ? `آخر جلب: ${String(live.fetchedAt || live.updatedAt).replace("T", " ").slice(0, 16)}` : "";
+  // جلب تلقائي عند الفتح إذا كان آخر جلب أقدم من 15 دقيقة
+  if (!live || (Date.now() - new Date(live.fetchedAt || 0).getTime()) > 15 * 60 * 1000) fetchLiveNow();
+};
+document.addEventListener("DOMContentLoaded", init);
+</script>
+</body>
+</html>
