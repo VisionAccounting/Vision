@@ -367,7 +367,7 @@ const init = () => {
   const tab = lsGet("gold_tab"); if (tab && document.getElementById("tab-" + tab)) switchTab(tab);
   const live = loadLive(); if (live && live.fetchedAt) state.lastOk = new Date(live.fetchedAt).getTime();
   scheduleNext(1500); setInterval(tick, 1000);
-  checkUpdate(); setInterval(checkUpdate, 10 * 60 * 1000);
+  checkUpdate(); setInterval(checkUpdate, ["localhost", "127.0.0.1"].includes(location.hostname) ? 30000 : 10 * 60 * 1000);
   document.addEventListener("visibilitychange", () => { if (!document.hidden) { checkUpdate(); if (state.nextAt && Date.now() >= state.nextAt) tick(); } });
   // تنزيل تاريخي تلقائي إن كانت البيانات قليلة (مرة كل 6 ساعات كحد أقصى)
   if (state.settings.autoHist && loadData().length < 250 && Date.now() - (+lsGet(HISTTRY_KEY) || 0) > 6 * 3600 * 1000) setTimeout(() => downloadHistory("5y", { silent: true }), 800);

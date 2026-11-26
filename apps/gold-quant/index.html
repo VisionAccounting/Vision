@@ -675,7 +675,7 @@ const rollingCorr = (a, b, w) => { const out = []; for (let i = w; i <= a.length
 const histVaR = (r, q) => { const v = quantileOf(r, q); const tail = r.filter(x => x <= v); return { var: -v, cvar: -mean(tail) }; };
 
 // ===================== الثوابت =====================
-const APP_VERSION = "2.1.0-f07f2ffd"; // يُستبدل عند البناء (build.py)
+const APP_VERSION = "2.1.0-2f10ef4b"; // يُستبدل عند البناء (build.py)
 const OUNCE_TO_GRAM = 31.1035;
 const STORAGE_KEY = "gold_model_data", SETTINGS_KEY = "gold_model_settings", LIVE_KEY = "gold_last_live", THEME_KEY = "gold_theme", LANG_KEY = "gold_lang", HISTTRY_KEY = "gold_hist_try", HELP_KEY = "gold_help", HELPSTATE_KEY = "gold_help_state";
 const DEFAULT_SIGMA = 0.012, BASE_MU = 0.0002, SAR_PEG = 3.75;
@@ -1390,7 +1390,7 @@ const init = () => {
   const tab = lsGet("gold_tab"); if (tab && document.getElementById("tab-" + tab)) switchTab(tab);
   const live = loadLive(); if (live && live.fetchedAt) state.lastOk = new Date(live.fetchedAt).getTime();
   scheduleNext(1500); setInterval(tick, 1000);
-  checkUpdate(); setInterval(checkUpdate, 10 * 60 * 1000);
+  checkUpdate(); setInterval(checkUpdate, ["localhost", "127.0.0.1"].includes(location.hostname) ? 30000 : 10 * 60 * 1000);
   document.addEventListener("visibilitychange", () => { if (!document.hidden) { checkUpdate(); if (state.nextAt && Date.now() >= state.nextAt) tick(); } });
   // تنزيل تاريخي تلقائي إن كانت البيانات قليلة (مرة كل 6 ساعات كحد أقصى)
   if (state.settings.autoHist && loadData().length < 250 && Date.now() - (+lsGet(HISTTRY_KEY) || 0) > 6 * 3600 * 1000) setTimeout(() => downloadHistory("5y", { silent: true }), 800);
