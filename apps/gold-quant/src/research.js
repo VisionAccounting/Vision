@@ -60,7 +60,7 @@ const computeResearch = (rows) => {
   const rs = rsi(prices, 14); if (rs !== null) comps.push({ k: "rsi", w: 0.1, val: rs.toFixed(0), sc: rs > 70 ? -clamp((rs - 70) / 15, 0, 1) : rs < 30 ? clamp((30 - rs) / 15, 0, 1) : 0 });
   if (sma200) { const sd = stdev(prices.slice(-200)), z = (P - sma200) / sd; comps.push({ k: "z", w: 0.1, val: z.toFixed(2), sc: -clamp(z / 2.5) * 0.6 }); }
   if (R.volPct !== undefined) comps.push({ k: "vol", w: 0.1, val: `${(R.volPct * 100).toFixed(0)}%`, sc: R.volPct > 0.85 ? -0.5 : 0 });
-  if (isFinite(fair.ratio)) comps.push({ k: "val", w: 0.2, val: fair.ratio.toFixed(2), sc: clamp((1 - fair.ratio) / 0.15) });
+  if (state.settings.fvCalibrated && isFinite(fair.ratio)) comps.push({ k: "val", w: 0.2, val: fair.ratio.toFixed(2), sc: clamp((1 - fair.ratio) / 0.15) });
   const wsum = comps.reduce((a, c) => a + c.w, 0); R.comp = { items: comps, total: wsum ? comps.reduce((a, c) => a + c.w * c.sc, 0) / wsum : 0 };
   // 5) مقارنة النماذج رجعياً
   try { R.bt = backtestCompare(lr, s); } catch (e) { R.bt = null; }
@@ -141,7 +141,7 @@ const renderResearch = () => {
   const ug = $("rsUseGarch"); if (ug) ug.addEventListener("click", () => { state.settings.volModel = "garch"; saveSettings(state.settings); refreshAll(true); toast(t("rs.garchOn")); });
   const ar = $("rsApplyReg"); if (ar) ar.addEventListener("click", () => {
     const m = R.regLvl, c = state.settings.coeffs, get = (n) => { const i = m.names.indexOf(n); return i >= 0 ? m.beta[i] : 0; };
-    c.alpha = m.beta[0]; c.beta1 = get("RealYield"); c.beta2 = get("DXY"); c.beta3 = 0; c.beta4 = get("VIX");
+    state.settings.fvCalibrated = true; c.alpha = m.beta[0]; c.beta1 = get("RealYield"); c.beta2 = get("DXY"); c.beta3 = 0; c.beta4 = get("VIX");
     const lr = lastNonNull(rows, "realYield"), dx = lastNonNull(rows, "dxy"), vx = lastNonNull(rows, "vix"); const v = state.settings.fvInputs; if (lr !== null) v.realYield = lr; if (dx !== null) v.dxy = dx; if (vx !== null) v.geoIndex = vx; v.cbFlows = 0;
     saveSettings(state.settings); renderFairInputs(); refreshAll(false); toast(t("rs.regApplied"), 4500); });
   if (!window.Chart) return;

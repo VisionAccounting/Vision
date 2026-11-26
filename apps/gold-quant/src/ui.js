@@ -18,7 +18,8 @@ const fmtV = (x) => fmt(x, state.settings.unit === "g" ? 2 : 1);
 // إشارة التداول: العدالة + موقع السعر من نطاق الأمس + الانحياز اليدوي
 const tradingSignal = () => {
   const reasons = []; let score = 0; const fair = currentFair(), r = isFinite(fair.ratio) ? fair.ratio.toFixed(3) : "";
-  if (isFinite(fair.ratio)) {
+  if (!state.settings.fvCalibrated) reasons.push(t("sg.fvUncal"));
+  else if (isFinite(fair.ratio)) {
     if (fair.ratio < 0.85) { score += 1; reasons.push(t("sg.under", { r })); }
     else if (fair.ratio > 1.15) { score -= 1; reasons.push(t("sg.over", { r })); }
     else if (fair.ratio < 0.95) { score += 0.5; reasons.push(t("sg.fairCheap", { r })); }
@@ -124,15 +125,18 @@ const renderBanners = () => {
   const out = [], ref = currentRef(), n = ref.rows.length;
   if (state.sigmaInfo && state.sigmaInfo.isDefault) out.push(`<div class="banner banner-warn">⚠ ${t("b.noData")} <button class="btn mt-2 sm:mt-0 sm:ms-2" id="btnBannerHist">${t("b.dl")}</button></div>`);
   else if (n < 250) out.push(`<div class="banner banner-info">ℹ ${t("b.fewData", { n })} <button class="btn mt-2 sm:mt-0 sm:ms-2" id="btnBannerHist">${t("b.dl")}</button></div>`);
-  const bad = suspiciousRows(ref.rows), lsus = liveSuspect(ref.live, ref.rows), manualBad = lsus && ref.live && ref.live.source === "manual";
-  if (bad.length || manualBad) out.push(`<div class="banner banner-bad">⚠ ${bad.length ? t("b.suspect", { n: bad.length, d: bad[0].date, v: fmt(+bad[0].gold) }) : ""} ${manualBad ? t("b.liveManualSuspect", { v: fmt(ref.live.price), r: fmt(refUsdMedian(ref.rows)) }) : ""} <button class="btn btn-primary mt-2 sm:mt-0 sm:ms-2" id="btnFixData">${t("b.fix")}</button></div>`);
-  else if (lsus) out.push(`<div class="banner banner-warn">⚠ ${t("b.dataMismatch", { v: fmt(ref.live.price), r: fmt(refUsdMedian(ref.rows)) })}</div>`);
+  const anchor = (ref.live && ref.live.price > 0 && ref.live.source !== "manual") ? ref.live.price : null;
+  const bad = suspiciousRows(ref.rows, anchor), lsus = liveSuspect(ref.live, ref.rows), manualBad = lsus && ref.live && ref.live.source === "manual";
+  if (bad.length || manualBad) out.push(`<div class="banner banner-bad">⚠ ${bad.length ? t("b.suspect", { n: bad.length, d: bad[0].date, v: fmt(+bad[0].gold) }) : ""} ${manualBad ? t("b.liveManualSuspect", { v: fmt(ref.live.price), r: fmt(refUsdMedian(ref.rows)) }) + " " + t("b.whichWrong") : ""} <button class="btn btn-primary mt-2 sm:mt-0 sm:ms-2" id="btnFixData">${t("b.fix")}</button>${manualBad ? ` <button class="btn mt-2 sm:mt-0 sm:ms-2" id="btnBannerReload">${t("b.reload")}</button>` : ""}</div>`);
+  if (lsus && !manualBad) out.push(`<div class="banner banner-warn">⚠ ${t("b.dataMismatch", { v: fmt(ref.live.price), r: fmt(refUsdMedian(ref.rows)) })} <button class="btn btn-primary mt-2 sm:mt-0 sm:ms-2" id="btnBannerReload">${t("b.reload")}</button></div>`);
+  if (ref.source === "live" && ref.live.others && ref.live.others.length) out.push(`<div class="banner banner-info">ℹ ${t("b.srcDisagree", { used: `${escHtml(ref.live.source)}: ${fmt(ref.live.price)}`, list: ref.live.others.map(o => `${escHtml(o.s)}: ${fmt(o.p)}`).join(" · ") })}</div>`);
   if (state.liveErr) out.push(`<div class="banner banner-warn">⚠ ${escHtml(liveErrText())}</div>`);
   else if (ref.source === "data" && ref.last) out.push(`<div class="banner banner-info">ℹ ${t("b.lastKnown", { d: ref.last.date })}</div>`);
   if (ref.source === "none") out.push(`<div class="banner banner-info">ℹ ${t("b.noPrice")}</div>`);
   if (state.settings.market === "EG" && !ref.egp && ref.source !== "none") out.push(`<div class="banner banner-warn">⚠ ${t("b.noEgp")}</div>`);
   $("banners").innerHTML = out.join("");
   const b = $("btnBannerHist"); if (b) b.addEventListener("click", () => { switchTab("data"); downloadHistory($("histRange").value); });
+  const rl = $("btnBannerReload"); if (rl) rl.addEventListener("click", () => { switchTab("data"); downloadHistory($("histRange").value); });
   const fx = $("btnFixData"); if (fx) fx.addEventListener("click", () => {
     const badDates = new Set(bad.map(r => r.date)); saveData(loadData().filter(r => !badDates.has(r.date)));
     if (manualBad) lsSet(LIVE_KEY, "null");
@@ -175,7 +179,7 @@ const renderDashboard = () => {
     kpiCard(t("k.price", { u: t("unit." + s.unit), k: s.karat }), ref.price ? fmt(ref.price) : "—", ut, `<span style="color:${chgCol || "var(--ink-3)"}">${chgTxt}</span> <span class="faint">· ${src}</span>`, null, cur),
     kpiCard(t("k.other", { u: t("unit." + other) }), otherPrice ? fmt(otherPrice) : "—", `${cur}/${t("unit." + other)}`, mk === "GL" ? "&nbsp;" : (fx ? `${t("k.fx")} USD/${cur} ${fmt(fx, 4)} · ${t("k.prem")} ${fmt(prem)}` : t("k.noFx")), null, cur),
     kpiCard(t("k.spot"), ref.priceUsd ? fmt(ref.priceUsd) : "—", "USD/oz", "&nbsp;", null, "USD"),
-    kpiCard(t("fair.ratio"), isFinite(fair0.ratio) ? fair0.ratio.toFixed(3) : "—", "", `<span style="color:${fair0.cls.color}">${fair0.cls.icon} ${fair0.cls.label}</span>${fair0.fvView ? ` · ${t("fv.fvLabel")} ${fmt(fair0.fvView)}` : ""}`, null, "")
+    kpiCard(t("fair.ratio"), isFinite(fair0.ratio) ? fair0.ratio.toFixed(3) : "—", "", `${s.fvCalibrated ? `<span style="color:${fair0.cls.color}">${fair0.cls.icon} ${fair0.cls.label}</span>` : `<span style="color:var(--warn)">⚠ ${t("fv.uncalShort")}</span>`}${fair0.fvView ? ` · ${t("fv.fvLabel")} ${fmt(fair0.fvView)}` : ""}`, null, "")
   ].join("");
   if (ref.price && state.shownPrice !== undefined && state.shownPrice !== ref.price) document.querySelectorAll("#kpis .card").forEach(c => { c.classList.remove("flash"); void c.offsetWidth; c.classList.add("flash"); });
   state.shownPrice = ref.price;
@@ -190,7 +194,7 @@ const renderDashboard = () => {
     </div>
     <ul class="text-xs muted mt-4 space-y-1.5 leading-5 flex-1">${sig.reasons.map(r => `<li>• ${r}</li>`).join("")}</ul>
     <div class="mt-3 pt-3 border-t text-sm flex justify-between items-center gap-2" style="border-color:var(--border)"><span class="muted">${t("fair.ratio")}</span>
-      <span><span class="num font-bold">${isFinite(fair.ratio) ? fair.ratio.toFixed(3) : "—"}</span> <span class="pill" style="color:${fair.cls.color}">${fair.cls.icon} ${fair.cls.label}</span></span></div>
+      <span><span class="num font-bold">${isFinite(fair.ratio) ? fair.ratio.toFixed(3) : "—"}</span> ${state.settings.fvCalibrated ? `<span class="pill" style="color:${fair.cls.color}">${fair.cls.icon} ${fair.cls.label}</span>` : `<span class="pill" style="color:var(--warn)">⚠ ${t("fv.uncalShort")}</span>`}</span></div>
     <p class="text-[11px] faint mt-2">${t("sg.disc")}</p>`;
   const mc = state.mc, si = state.sigmaInfo;
   $("miniStats").innerHTML =
@@ -228,7 +232,7 @@ const renderFairInputs = () => {
   const vr = [["realYield", "fv.ry"], ["dxy", "fv.dxy"], ["cbFlows", "fv.cb"], ["geoIndex", "fv.geo"]];
   $("varInputs").innerHTML = vr.map(([k, l]) => `<div><label class="lbl">${t(l)}</label><input type="number" step="any" class="inp" data-fv="${k}" value="${s.fvInputs[k]}"></div>`).join("");
   labelize();
-  document.querySelectorAll("[data-coeff]").forEach(el => el.addEventListener("input", () => { const v = num(el.value); if (v !== null) { state.settings.coeffs[el.dataset.coeff] = v; saveSettings(state.settings); renderFair(); renderDashboard(); } }));
+  document.querySelectorAll("[data-coeff]").forEach(el => el.addEventListener("input", () => { const v = num(el.value); if (v !== null) { state.settings.coeffs[el.dataset.coeff] = v; state.settings.fvCalibrated = true; saveSettings(state.settings); renderFair(); renderDashboard(); } }));
   document.querySelectorAll("[data-fv]").forEach(el => el.addEventListener("input", () => { const v = num(el.value); if (v !== null) { state.settings.fvInputs[el.dataset.fv] = v; saveSettings(state.settings); renderFair(); renderDashboard(); } }));
 };
 const renderFair = () => {
@@ -236,7 +240,7 @@ const renderFair = () => {
   $("fairResult").innerHTML =
     kpiCard(t("fv.fvLabel"), isFinite(f.fv) ? fmt(f.fv) : "—", "USD/oz", f.fv <= 0 ? t("fv.bad") : "", f.fv <= 0 ? "var(--bad)" : null) +
     kpiCard(t("fv.market"), S0u ? fmt(S0u) : "—", "USD/oz", gap === null ? "" : `${t("fv.gap")} ${gap >= 0 ? "+" : ""}${fmt(gap)} $ (${pct(gap / f.fv, 1)})`) +
-    `<div class="card p-4"><div class="text-sm muted">${t("fv.ratioLbl")}</div><div class="mt-1 text-2xl font-bold num">${isFinite(f.ratio) ? f.ratio.toFixed(3) : "—"}</div><div class="mt-2"><span class="pill" style="color:${f.cls.color}">${f.cls.icon} ${f.cls.label}</span></div><div class="text-[11px] faint mt-2">${t("fv.legend")}</div></div>`;
+    `<div class="card p-4"><div class="text-sm muted">${t("fv.ratioLbl")}</div><div class="mt-1 text-2xl font-bold num">${isFinite(f.ratio) ? f.ratio.toFixed(3) : "—"}</div><div class="mt-2"><span class="pill" style="color:${f.cls.color}">${f.cls.icon} ${f.cls.label}</span></div><div class="text-[11px] faint mt-2">${t("fv.legend")}</div>${s.fvCalibrated ? "" : `<div class="text-xs mt-2" style="color:var(--warn)">⚠ ${t("fv.uncal")}</div>`}</div>`;
   $("tblFairLocal").innerHTML = `<thead><tr><th>${t("lc.market")}</th><th>${t("fv.fair24")} (${ut})</th><th>${t("fv.mkt24")} (${ut})</th><th>${t("fv.gap")}</th></tr></thead><tbody><tr><td>${t("mk." + s.market)} · ${s.karat}K</td>` +
     (f.fvView && state.S0 ? `<td><span class="num">${fmt(f.fvView)}</span></td><td><span class="num">${fmt(state.S0)}</span></td><td><span class="num" style="color:${f.ratio > 1 ? "var(--bad)" : "var(--good)"}">${f.ratio >= 1 ? "+" : ""}${pct(f.ratio - 1, 1)}</span></td>` : `<td colspan="3" class="faint">—</td>`) + `</tr></tbody>`;
 };
@@ -303,7 +307,7 @@ const parseCSV = (text) => {
   const out = []; let bad = 0;
   lines.forEach((l, idx) => { const c = l.split(sep).map(x => x.trim().replace(/^"|"$/g, "")); if (idx === 0 && isNaN(parseFloat(c[1]))) return; const d = new Date(c[0]);
     const row = { date: isNaN(d) ? null : d.toISOString().slice(0, 10), gold: num(c[1]), sar: num(c[2]), egp: num(c[3]), realYield: num(c[4]), dxy: num(c[5]), vix: num(c[6]) };
-    if (row.date && row.gold > 0) out.push(row); else bad++; });
+    row.src = "csv"; if (row.date && row.gold > 0) out.push(row); else bad++; });
   return { rows: out, bad };
 };
 const importCSV = (file) => {
@@ -318,7 +322,7 @@ const makeDemo = () => {
   const rows = []; let p = 3500, egp = 48.5, ry = 1.8, dxy = 99, vix = 16; const d = new Date(); d.setDate(d.getDate() - 560);
   while (rows.length < 400) { d.setDate(d.getDate() + 1); if (d.getDay() === 0 || d.getDay() === 6) continue;
     const dr = 0.0003 + 0.011 * studentT(5) / Math.sqrt(5 / 3); p *= Math.exp(dr); egp *= Math.exp(0.002 * randNormal()); ry += 0.02 * randNormal() - 0.2 * dr; dxy *= Math.exp(0.003 * randNormal() - 0.2 * dr); vix = Math.max(10, vix + 0.7 * randNormal() + 20 * Math.abs(dr) - 0.05 * (vix - 16));
-    rows.push({ date: d.toISOString().slice(0, 10), gold: +p.toFixed(2), sar: 3.75, egp: +egp.toFixed(4), realYield: +ry.toFixed(2), dxy: +dxy.toFixed(2), vix: +vix.toFixed(2) }); }
+    rows.push({ src: "demo", date: d.toISOString().slice(0, 10), gold: +p.toFixed(2), sar: 3.75, egp: +egp.toFixed(4), realYield: +ry.toFixed(2), dxy: +dxy.toFixed(2), vix: +vix.toFixed(2) }); }
   return rows;
 };
 
@@ -366,7 +370,7 @@ const bind = () => {
   $("inTarget").addEventListener("input", renderForecast);
   $("btnCoverage").addEventListener("click", doCoverage); $("btnChristoffersen").addEventListener("click", doChristoffersen);
   $("rowForm").addEventListener("submit", (e) => { e.preventDefault(); const last = loadData().slice(-1)[0] || {};
-    const row = { date: $("fDate").value, gold: num($("fGold").value), sar: num($("fSar").value) || last.sar || SAR_PEG, egp: num($("fEgp").value) || last.egp || null, realYield: num($("fRy").value), dxy: num($("fDxy").value), vix: num($("fVix").value) };
+    const row = { src: "manual", date: $("fDate").value, gold: num($("fGold").value), sar: num($("fSar").value) || last.sar || SAR_PEG, egp: num($("fEgp").value) || last.egp || null, realYield: num($("fRy").value), dxy: num($("fDxy").value), vix: num($("fVix").value) };
     if (!row.date || !(row.gold > 0)) { toast(t("row.invalid")); return; }
     if (last.gold && Math.abs(Math.log(row.gold / +last.gold)) > 0.15 && !confirm(t("row.jump"))) return;
     if (addRow(row)) { toast(t("row.added")); $("rowForm").reset(); $("fDate").value = todayISO(); refreshAll(true); } });

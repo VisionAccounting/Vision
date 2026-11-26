@@ -108,7 +108,15 @@ ar: {
 "b.liveManualSuspect":"السعر اليدوي الحالي {v} دولار للأونصة بعيد جداً عن بياناتك ({r}).",
 "b.fix":"حذف القيم الخاطئة وإعادة الجلب",
 "b.fixed":"تم حذف القيم الخاطئة، وجاري جلب السعر الحالي",
-"b.dataMismatch":"السعر الحي {v} دولار للأونصة يختلف كثيراً عن بياناتك المخزنة ({r}) — قد تكون بيانات تجريبية. امسحها من تبويب البيانات ثم حمّل البيانات التاريخية."
+"b.dataMismatch":"السعر الحي {v} دولار للأونصة يختلف كثيراً عن بياناتك المخزنة ({r})، فالبيانات من مصدر غير متسق أو تجريبية. أعد تحميل التاريخ ليُختار المصدر الأقرب للسعر الحي ويستبدل الصفوف الآلية القديمة (صفوفك اليدوية تبقى).",
+"log.val":"القيمة",
+"log.outlier":"مستبعد (لا يتفق مع بقية المصادر)",
+"b.reload":"إعادة تحميل التاريخ",
+"b.srcDisagree":"المصادر لم تتفق على السعر: اعتُمد {used}، وأعطت مصادر أخرى {list}. قارن بمصدر تثق به (بنكك أو موقع أسعار معروف).",
+"b.whichWrong":"إن كان سعرك اليدوي هو الصحيح فالتاريخ المخزن من مصدر غير متسق: اختر «إعادة تحميل التاريخ». وإن كان السعر اليدوي خاطئاً فاختر الحذف.",
+"sg.fvUncal":"القيمة العادلة لا تدخل في الإشارة: معاملات النموذج افتراضية وغير معايرة (طبّق معاملات الانحدار من «الدراسات الإحصائية» أو أدخل معاملاتك).",
+"fv.uncalShort":"غير معاير",
+"fv.uncal":"المعاملات افتراضية توضيحية؛ لا تُستخدم هذه النسبة في إشارة التداول حتى تعايرها."
 },
 en: {
 "app.title":"GoldQuant — Gold Valuation & Daily Forecast","app.short":"Gold Valuation","app.sub":"Saudi Arabia · Egypt · Global — Last calibrated 2026-11-26",
@@ -218,6 +226,14 @@ en: {
 "b.liveManualSuspect":"The current manual price, {v} USD per ounce, is very far from your data ({r}).",
 "b.fix":"Remove wrong values and refetch",
 "b.fixed":"Wrong values removed; fetching the current price",
-"b.dataMismatch":"The live price, {v} USD per ounce, is far from your stored data ({r}) — it may be demo data. Clear it in the Data tab, then download historical data."
+"b.dataMismatch":"The live price, {v} USD per ounce, is far from your stored data ({r}); the data comes from an inconsistent source or is demo data. Reload history so the source closest to the live price is chosen and old automatic rows are replaced (your manual rows are kept).",
+"log.val":"Value",
+"log.outlier":"excluded (disagrees with other sources)",
+"b.reload":"Reload history",
+"b.srcDisagree":"Sources disagreed on the price: using {used}; other sources gave {list}. Compare with a source you trust (your bank or a well-known price site).",
+"b.whichWrong":"If your manual price is correct, the stored history comes from an inconsistent source: choose “Reload history”. If the manual price is wrong, choose remove.",
+"sg.fvUncal":"Fair value is not used in the signal: the model coefficients are illustrative defaults (apply the regression coefficients from the Statistical Lab or enter yours).",
+"fv.uncalShort":"not calibrated",
+"fv.uncal":"Coefficients are illustrative defaults; this ratio is not used in the trading signal until you calibrate it."
 }
 };

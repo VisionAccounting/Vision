@@ -21,7 +21,8 @@ const DEFAULT_SETTINGS = {
   premiumSA: 0, premiumEG: 0, lambda: 0.94, nu: 5, mu: BASE_MU, sigmaMult: 1, nSims: 10000, volModel: "ewma",
   market: "SA", unit: "g", karat: 24, basis: "local", chartRange: 90, refreshMin: 5, autoRow: true, autoHist: true,
   coeffs: { alpha: 5200, beta1: -450, beta2: -12, beta3: 1.5, beta4: 8 },
-  fvInputs: { realYield: 1.8, dxy: 99, cbFlows: 80, geoIndex: 120 }
+  fvInputs: { realYield: 1.8, dxy: 99, cbFlows: 80, geoIndex: 120 },
+  fvCalibrated: false // المعاملات الافتراضية توضيحية؛ لا تدخل في الإشارة حتى يعايرها المستخدم
 };
 
 // ===================== أدوات عامة =====================
@@ -96,6 +97,7 @@ const loadSettings = () => { try { const s = JSON.parse(lsGet(SETTINGS_KEY) || "
     if (out.unit !== "g" && out.unit !== "oz") out.unit = "g";
     out.karat = KARATS.includes(+out.karat) ? +out.karat : 24;
     if (out.basis !== "local" && out.basis !== "usd") out.basis = "local";
+    if (s.fvCalibrated === undefined) out.fvCalibrated = JSON.stringify(out.coeffs) !== JSON.stringify(DEFAULT_SETTINGS.coeffs);
     delete out.markets; return out; } catch (e) { return clone(DEFAULT_SETTINGS); } };
 const saveSettings = (s) => lsSet(SETTINGS_KEY, JSON.stringify(s));
 const loadLive = () => { try { return JSON.parse(lsGet(LIVE_KEY) || "null"); } catch (e) { return null; } };
@@ -228,14 +230,43 @@ const FX_SOURCES = [
 const errMsg = (e) => (e && e.errors) ? "log.allFailed" : ((e && e.message) || "log.failed");
 const renderFetchLog = () => {
   const el = $("fetchLog"); if (!el) return;
-  el.innerHTML = state.fetchLog.length ? `<table class="tbl"><thead><tr><th>${t("log.src")}</th><th>${t("log.kind")}</th><th>${t("log.res")}</th><th>${t("log.ms")}</th></tr></thead><tbody>` +
-    state.fetchLog.map(l => `<tr><td>${escHtml(l.src)}</td><td>${l.kind === "gold" ? t("log.gold") : t("log.fx")}</td><td style="color:${l.ok ? "var(--good)" : "var(--bad)"}">${l.ok ? "✓ " + t("log.ok") : "✗ " + escHtml(t(l.note || ""))}</td><td><span class="num">${l.ms}ms</span></td></tr>`).join("") + `</tbody></table>` : `<p class="text-sm faint">${t("log.none")}</p>`;
+  el.innerHTML = state.fetchLog.length ? `<table class="tbl"><thead><tr><th>${t("log.src")}</th><th>${t("log.kind")}</th><th>${t("log.val")}</th><th>${t("log.res")}</th><th>${t("log.ms")}</th></tr></thead><tbody>` +
+    state.fetchLog.map(l => `<tr><td>${escHtml(l.src)}</td><td>${l.kind === "gold" ? t("log.gold") : t("log.fx")}</td><td><span class="num">${escHtml(l.val || "")}</span></td><td style="color:${l.ok ? (l.used === false ? "var(--warn)" : "var(--good)") : "var(--bad)"}">${l.ok ? (l.used === false ? "● " + t("log.outlier") : "✓ " + t("log.ok")) : "✗ " + escHtml(t(l.note || ""))}</td><td><span class="num">${l.ms}ms</span></td></tr>`).join("") + `</tbody></table>` : `<p class="text-sm faint">${t("log.none")}</p>`;
 };
-const raceSources = (list, kind) => Promise.any(list.map(async (s) => {
-  const t0 = performance.now();
-  try { const d = await fetchWithProxy(s.url); const r = { ...s.parse(d), source: s.name }; state.fetchLog.push({ src: s.name, kind, ok: true, ms: Math.round(performance.now() - t0) }); renderFetchLog(); return r; }
-  catch (e) { state.fetchLog.push({ src: s.name, kind, ok: false, note: errMsg(e), ms: Math.round(performance.now() - t0) }); renderFetchLog(); throw e; }
-}));
+// أولوية المصادر عند التعادل (الأكثر موثوقية أولاً)
+const SRC_PRIORITY = ["gold-api.com", "goldprice.org", "xaus.com", "frankfurter", "open.er-api.com", "currency-api (jsDelivr)", "currency-api (pages.dev)"];
+const prio = (name) => { const i = SRC_PRIORITY.indexOf(name); return i < 0 ? 99 : i; };
+const STALE_MS = 4 * 86400000; // مصدر عمره أكثر من 4 أيام = قديم، يُستبعد
+// نجمع ردود كل المصادر (لا أول رد فقط) حتى تكتمل أو تنتهي المهلة
+const gatherSources = (list, kind, timeout = 9000) => new Promise((resolve) => {
+  const out = []; let done = 0, finished = false;
+  const finish = () => { if (!finished) { finished = true; resolve(out); } };
+  const timer = setTimeout(finish, timeout);
+  list.forEach(async (s) => {
+    const t0 = performance.now();
+    try {
+      const r = { ...s.parse(await fetchWithProxy(s.url)), source: s.name };
+      const ts = r.updatedAt ? new Date(r.updatedAt).getTime() : NaN;
+      if (isFinite(ts) && Date.now() - ts > STALE_MS) throw new Error("stale " + String(r.updatedAt).slice(0, 10));
+      if (kind === "gold" && !(r.price > 0)) throw new Error("shape");
+      if (!finished) out.push(r);
+      state.fetchLog.push({ src: s.name, kind, ok: true, val: kind === "gold" ? fmt(r.price) : `${fmt(r.sar, 4)} / ${fmt(r.egp, 4)}`, ms: Math.round(performance.now() - t0) });
+    } catch (e) { state.fetchLog.push({ src: s.name, kind, ok: false, note: errMsg(e), ms: Math.round(performance.now() - t0) }); }
+    renderFetchLog();
+    if (++done === list.length) { clearTimeout(timer); finish(); }
+  });
+});
+// الإجماع: أكبر مجموعة مصادر متقاربة (فرق لوغاريتمي ≤ tol)، والتعادل يُحسم بأولوية المصدر، والقيمة = وسيط المجموعة
+const consensus = (items, key, tol) => {
+  const xs = items.filter(v => v[key] > 0); if (!xs.length) return null;
+  let best = null;
+  for (const cand of xs) {
+    const g = xs.filter(v => Math.abs(Math.log(v[key] / cand[key])) <= tol), gp = Math.min(...g.map(v => prio(v.source)));
+    if (!best || g.length > best.g.length || (g.length === best.g.length && gp < best.p)) best = { g, p: gp };
+  }
+  const vals = best.g.map(v => v[key]).sort((a, b) => a - b), m = vals.length;
+  return { value: m % 2 ? vals[(m - 1) / 2] : (vals[m / 2 - 1] + vals[m / 2]) / 2, agree: best.g, others: xs.filter(v => !best.g.includes(v)) };
+};
 const fetchFredLast = async (id) => {
   const text = await fetchWithProxy("https://fred.stlouisfed.org/graph/fredgraph.csv?id=" + id, { as: "text", proxyFirst: true, timeout: 12000 });
   const lines = text.trim().split(/\r?\n/).slice(1).reverse();
@@ -275,10 +306,12 @@ const tick = () => {
 // ---- سلامة البيانات ----
 // قفزة يومية أكبر من 20% في سعر الذهب لم تحدث تاريخياً؛ إن لم تستمر في اليوم التالي فهي قراءة/إدخال خاطئ
 const SPIKE = 0.2;
-const suspiciousRows = (rows) => {
+// anchor = سعر الإجماع الحي من المصادر الآلية؛ أي صف يتفق معه (±5%) لا يُعدّ شاذاً حتى لو كان التاريخ قبله خاطئاً
+const suspiciousRows = (rows, anchor = null) => {
   const out = [];
   for (let i = 1; i < rows.length; i++) {
     const a = +rows[i - 1].gold, b = +rows[i].gold; if (!(a > 0 && b > 0) || Math.abs(Math.log(b / a)) <= SPIKE) continue;
+    if (anchor > 0 && Math.abs(Math.log(b / anchor)) < 0.05) continue;
     const c = i + 1 < rows.length ? +rows[i + 1].gold : null;
     if (c === null || !(c > 0) || Math.abs(Math.log(c / a)) < 0.05) out.push(rows[i]);
   }
@@ -298,8 +331,8 @@ const upsertToday = (live) => {
   if (liveSuspect(live, loadData())) return; // لا نلوّث السجل بقيمة بعيدة جداً عن الأيام السابقة
   const rows = loadData().slice(), i = rows.findIndex(r => r.date === d), prev = rows[rows.length - 1] || {};
   const base = { date: d, gold: +live.price.toFixed(2), sar: live.sar || prev.sar || SAR_PEG, egp: live.egp || prev.egp || null };
-  if (i >= 0) rows[i] = { ...rows[i], gold: base.gold, sar: base.sar, egp: base.egp };
-  else { rows.push({ ...base, realYield: prev.realYield ?? null, dxy: prev.dxy ?? null, vix: prev.vix ?? null }); rows.sort((a, b) => a.date < b.date ? -1 : 1); }
+  if (i >= 0) { if (rows[i].src === "manual") return; rows[i] = { ...rows[i], gold: base.gold, sar: base.sar, egp: base.egp, src: "live" }; }
+  else { rows.push({ ...base, realYield: prev.realYield ?? null, dxy: prev.dxy ?? null, vix: prev.vix ?? null, src: "live" }); rows.sort((a, b) => a.date < b.date ? -1 : 1); }
   saveData(rows);
 };
 const liveErrText = () => { const e = state.liveErr; if (!e) return ""; return (e.known ? t("live.errKnown", { k: e.known }) : t("live.errNone")) + (e.fx ? " " + t("live.fxOnly") : "") + " " + t("live.useManual") + (e.wait ? " " + t("live.retry", { s: e.wait, n: e.n }) : ""); };
@@ -312,25 +345,30 @@ const fetchLiveNow = async () => {
   const msg = (...parts) => setMsg("fetchMsg", parts, parts[0] && parts[0][0] === "live.fetching");
   msg(["live.fetching"]); state.fetchLog = []; renderFetchLog();
   const prevLive = loadLive() || {};
-  const [g, f] = await Promise.allSettled([raceSources(GOLD_SOURCES, "gold"), raceSources(FX_SOURCES, "fx")]);
-  const gold = g.status === "fulfilled" ? g.value : null; let fx = f.status === "fulfilled" ? f.value : null;
-  if (!fx && gold && gold.sar && gold.egp) fx = { sar: gold.sar, egp: gold.egp, source: gold.source };
+  const [goldRes, fxRes] = await Promise.all([gatherSources(GOLD_SOURCES, "gold"), gatherSources(FX_SOURCES, "fx")]);
+  const gc = consensus(goldRes, "price", 0.015), sc = consensus(fxRes, "sar", 0.01), ec = consensus(fxRes, "egp", 0.02);
+  // علّم في السجل المصادر الشاذة عن الإجماع
+  if (gc) state.fetchLog.forEach(l => { if (l.kind === "gold" && l.ok && gc.others.some(o => o.source === l.src)) l.used = false; });
+  renderFetchLog();
+  const gold = gc ? { price: gc.value, updatedAt: gc.agree.map(v => v.updatedAt).filter(Boolean).sort().pop() || null, source: gc.agree.map(v => v.source).join(" + "), agree: gc.agree.length, others: gc.others.map(v => ({ s: v.source, p: v.price })) } : null;
+  const fxSar = sc ? sc.value : null, fxEgp = ec ? ec.value : null, fxOk = !!(fxSar && fxEgp);
+  const fxSrc = [...new Set([...(sc ? sc.agree : []), ...(ec ? ec.agree : [])].map(v => v.source))].join(" + ");
   const now = new Date().toISOString();
   if (gold) {
-    const live = { price: gold.price, updatedAt: gold.updatedAt || now, source: gold.source, sar: fx ? fx.sar : prevLive.sar, egp: fx ? fx.egp : prevLive.egp, fxSource: fx ? fx.source : (prevLive.fxSource || null), fetchedAt: now };
+    const live = { price: gold.price, updatedAt: gold.updatedAt || now, source: gold.source, agree: gold.agree, others: gold.others, sar: fxSar || prevLive.sar, egp: fxEgp || prevLive.egp, fxSource: fxOk ? fxSrc : (prevLive.fxSource || null), fetchedAt: now };
     saveLive(live);
     $("fDate").value = todayISO(); $("fGold").value = gold.price.toFixed(2); if (live.sar) $("fSar").value = (+live.sar).toFixed(4); if (live.egp) $("fEgp").value = (+live.egp).toFixed(4);
     if (state.settings.autoRow) upsertToday(live);
-    fx ? msg(["live.done", { p: fmt(gold.price), s: gold.source }]) : msg(["live.done", { p: fmt(gold.price), s: gold.source }], ["live.noFx"]);
+    fxOk ? msg(["live.done", { p: fmt(gold.price), s: gold.source }]) : msg(["live.done", { p: fmt(gold.price), s: gold.source }], ["live.noFx"]);
     state.liveErr = null;
     retryCount = 0; state.lastOk = Date.now(); state.lastFail = null; scheduleNext();
   } else {
-    if (fx && prevLive.price) saveLive({ ...prevLive, sar: fx.sar, egp: fx.egp, fxSource: fx.source, fetchedAt: now });
+    if ((fxSar || fxEgp) && prevLive.price) saveLive({ ...prevLive, sar: fxSar || prevLive.sar, egp: fxEgp || prevLive.egp, fxSource: fxSrc || prevLive.fxSource, fetchedAt: now });
     const rows = loadData(), last = rows[rows.length - 1];
     const known = prevLive.price ? `${fmt(prevLive.price)} $ · ${String(prevLive.updatedAt || "").slice(0, 10)}` : (last ? `${fmt(+last.gold)} $ · ${last.date}` : null);
     state.lastFail = Date.now(); retryCount++;
     const wait = retryCount <= 3 ? 20000 * retryCount : 0;
-    state.liveErr = { known, fx: !!fx, wait: wait / 1000, n: retryCount };
+    state.liveErr = { known, fx: fxOk, wait: wait / 1000, n: retryCount };
     if (wait) scheduleNext(wait); else scheduleNext();
     msg(["live.failed"]);
   }
@@ -367,7 +405,7 @@ const despike = (pts) => pts.filter((p, i) => { if (i === 0 || i === pts.length 
 const mergeHistory = (goldPts, series) => {
   const ptr = {}, last = {}; Object.keys(series).forEach(k => { ptr[k] = 0; last[k] = null; });
   return goldPts.map(([date, gold]) => {
-    const row = { date, gold: +gold.toFixed(2) };
+    const row = { date, gold: +gold.toFixed(2), src: "hist" };
     for (const k of Object.keys(series)) { const s = series[k]; while (ptr[k] < s.length && s[ptr[k]][0] <= date) { last[k] = s[ptr[k]][1]; ptr[k]++; } row[k] = last[k] === null ? (k === "sar" ? SAR_PEG : null) : +(+last[k]).toFixed(4); }
     return row;
   });
@@ -382,8 +420,17 @@ async function downloadHistory(range, { silent = false } = {}) {
   if (histBusy) return; histBusy = true; lsSet(HISTTRY_KEY, String(Date.now()));
   const st = {}; HIST_STEPS.forEach(k => { st[k] = { s: "wait" }; }); state.hist = st; renderHistSteps(); $("btnHist").disabled = true; setMsg("histMsg", [["hist.running"]], true);
   const set = (k, s, note) => { st[k] = { s, note }; renderHistSteps(); };
-  const run = async (k, fn) => { set(k, "run"); try { const p = await fn(); set(k, "ok", p.length + ""); return p; } catch (e) { set(k, "fail", errMsg(e)); return null; } };
-  const gold = await run("gold", () => firstOk([() => yahooPts("XAUUSD=X", range), () => yahooPts("GC=F", range), () => stooqPts("xauusd", range)]).then(despike));
+  const run = async (k, fn) => { set(k, "run"); try { const p = await fn(); set(k, "ok", p.note || (p.length + "")); return p; } catch (e) { set(k, "fail", errMsg(e)); return null; } };
+  // نجلب كل مرشحي الذهب ونختار السلسلة التي آخر إغلاق فيها أقرب للسعر الحي (لا أول مصدر يرد)
+  const gold = await run("gold", async () => {
+    const lv = loadLive(), ref = (lv && lv.price > 0 && lv.source !== "manual") ? lv.price : null;
+    const cands = [["Yahoo XAUUSD=X", () => yahooPts("XAUUSD=X", range)], ["Yahoo GC=F", () => yahooPts("GC=F", range)], ["Stooq XAUUSD", () => stooqPts("xauusd", range)]];
+    const res = await Promise.allSettled(cands.map(([, f]) => f())); let best = null;
+    res.forEach((r, i) => { if (r.status !== "fulfilled") return; const pts = despike(r.value); if (pts.length < 20) return; const last = pts[pts.length - 1][1], dev = ref ? Math.abs(Math.log(last / ref)) : i; if (!best || dev < best.dev) best = { pts, name: cands[i][0], last, dev }; });
+    if (!best) throw new Error("no source");
+    best.pts.note = `${best.pts.length} · ${best.name} · ${fmt(best.last)}$` + (ref && best.dev > 0.1 ? ` ⚠ ≠ ${fmt(ref)}$` : "");
+    return best.pts;
+  });
   if (!gold) { setMsg("histMsg", [["hist.failed"]]); if (!silent) toast(t("hist.failed")); histBusy = false; $("btnHist").disabled = false; return; }
   const series = {};
   series.sar = await run("sar", () => firstOk([() => yahooPts("SAR=X", range), () => stooqPts("usdsar", range)], 5));
@@ -393,7 +440,9 @@ async function downloadHistory(range, { silent = false } = {}) {
   series.realYield = await run("ry", () => firstOk([() => fredPts("DFII10", range)], 5));
   Object.keys(series).forEach(k => { if (!series[k]) delete series[k]; });
   const rows = mergeHistory(gold, series), map = new Map(rows.map(r => [r.date, r]));
-  loadData().forEach(r => { const d = map.get(r.date) || {}; const o = { ...d }; Object.keys(r).forEach(k => { if (r[k] !== null && r[k] !== undefined && r[k] !== "") o[k] = r[k]; }); map.set(r.date, o); });
+  // الدمج: صفوفك اليدوية (manual/csv) تبقى كما هي؛ أما الصفوف الآلية القديمة فتُستبدل بالمصدر المتسق الجديد
+  const nn = (o) => Object.fromEntries(Object.entries(o).filter(([, v]) => v !== null && v !== undefined && v !== ""));
+  loadData().forEach(r => { const d = map.get(r.date); if (!d) { map.set(r.date, r); return; } map.set(r.date, (r.src === "manual" || r.src === "csv") ? { ...d, ...nn(r) } : { ...r, ...nn(d) }); });
   const out = [...map.values()].sort((a, b) => a.date < b.date ? -1 : 1);
   saveData(out); dataCache = null;
   const hp = { n: gold.length, a: gold[0][0], b: gold[gold.length - 1][0] };

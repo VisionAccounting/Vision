@@ -107,4 +107,14 @@ ok('fairness boundaries', cls(1.15) === 'fair' && cls(1.1500001) === 'over' && c
   ok('persistent level change (not reverting) is not flagged as spike', suspiciousRows(regime).length === 0);
   ok('robust reference median ignores the bad row', refUsdMedian(midBad) === 6120, String(refUsdMedian(midBad)));
   ok('liveSuspect: manual 740.95 vs ~6100 history', liveSuspect({ price: 740.95 }, base) === true && liveSuspect({ price: 6200 }, base) === false); }
+// ---- 12) إجماع المصادر: لا نأخذ أول رد، بل الأغلبية المتقاربة ----
+{ const g = [{ source: 'currency-api (jsDelivr)', price: 3525.10 }, { source: 'gold-api.com', price: 6144.16 }, { source: 'goldprice.org', price: 6146.00 }];
+  const c = consensus(g, 'price', 0.015);
+  ok('consensus picks agreeing majority, excludes outlier', near(c.value, (6144.16 + 6146) / 2, 1e-12) && c.others.length === 1 && c.others[0].price === 3525.10, String(c.value));
+  const tie = consensus([{ source: 'currency-api (jsDelivr)', price: 3525.10 }, { source: 'gold-api.com', price: 6144.16 }], 'price', 0.015);
+  ok('tie broken by source priority (gold-api over currency-api)', tie.value === 6144.16 && tie.others[0].source.startsWith('currency-api'));
+  const one = consensus([{ source: 'xaus.com', price: 6100 }], 'price', 0.015); ok('single source accepted', one.value === 6100 && one.others.length === 0);
+  ok('no sources -> null', consensus([], 'price', 0.015) === null);
+  const fx = consensus([{ source: 'frankfurter', egp: 54.2126 }, { source: 'open.er-api.com', egp: 54.10 }, { source: 'currency-api (jsDelivr)', egp: 48.0 }], 'egp', 0.02);
+  ok('FX consensus excludes stale EGP', near(fx.value, (54.2126 + 54.10) / 2, 1e-12) && fx.others.length === 1, String(fx.value)); }
 console.log(fail ? `\n${fail} FAILED` : '\nall calc tests passed'); process.exit(fail ? 1 : 0);
