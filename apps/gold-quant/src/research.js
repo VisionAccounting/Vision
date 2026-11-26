@@ -19,11 +19,10 @@ const backtestCompare = (lr, s) => {
   return res;
 };
 const clamp = (x, a = -1, b = 1) => Math.max(a, Math.min(b, x));
-let researchMemo = { key: null, val: null };
+let researchMemo = { rows: null, sig: null, val: null };
 const computeResearch = (rows) => {
-  const last = rows[rows.length - 1], s = state.settings;
-  const key = rows.length + "|" + (last && last.date) + "|" + (last && last.gold) + "|" + s.nu + "|" + s.lambda;
-  if (researchMemo.key === key) return researchMemo.val;
+  const last = rows[rows.length - 1], s = state.settings, sig = s.nu + "|" + s.lambda + "|" + viewSig();
+  if (researchMemo.rows === rows && researchMemo.sig === sig) return researchMemo.val;
   if (rows.length < 60) return { insufficient: true, n: rows.length };
   const t0 = performance.now(), prices = rows.map(r => +r.gold), lr = logReturns(rows), N = lr.length, R = { n: N, from: rows[0].date, to: last.date };
   // 1) التوزيع والاختبارات
@@ -39,12 +38,12 @@ const computeResearch = (rows) => {
   if (vars.length) {
     const comp = rows.filter(r => vars.every(([k]) => r[k] !== null && r[k] !== undefined));
     if (comp.length >= 100) {
-      const lvl = ols(comp.map(r => vars.map(([k]) => +r[k])), comp.map(r => +r.gold));
+      const lvl = ols(comp.map(r => vars.map(([k]) => +r[k])), comp.map(r => +r.usd));
       if (lvl) R.regLvl = { ...lvl, n: comp.length, eg: engleGranger(lvl.resid, vars.length), names: ["α", ...vars.map(v => v[1])] };
     }
     const X = [], Y = [], dates = [], cols = { g: [], dxy: [], ry: [], vix: [] };
-    for (let i = 1; i < rows.length; i++) { const a = rows[i - 1], b = rows[i]; if (!vars.every(([k]) => a[k] != null && b[k] != null) || !(+a.gold > 0)) continue;
-      const row = vars.map(([k]) => k === "dxy" ? Math.log(+b[k] / +a[k]) : (+b[k] - +a[k])); X.push(row); Y.push(Math.log(+b.gold / +a.gold)); dates.push(b.date); }
+    for (let i = 1; i < rows.length; i++) { const a = rows[i - 1], b = rows[i]; if (!vars.every(([k]) => a[k] != null && b[k] != null) || !(+a.usd > 0)) continue;
+      const row = vars.map(([k]) => k === "dxy" ? Math.log(+b[k] / +a[k]) : (+b[k] - +a[k])); X.push(row); Y.push(Math.log(+b.usd / +a.usd)); dates.push(b.date); }
     if (X.length >= 100) { const f = ols(X, Y); if (f) R.regChg = { ...f, names: ["α", ...vars.map(v => v[1])] };
       const idx = (name) => vars.findIndex(v => v[1] === name);
       R.roll = {}; const W = 60;
@@ -65,7 +64,7 @@ const computeResearch = (rows) => {
   const wsum = comps.reduce((a, c) => a + c.w, 0); R.comp = { items: comps, total: wsum ? comps.reduce((a, c) => a + c.w * c.sc, 0) / wsum : 0 };
   // 5) مقارنة النماذج رجعياً
   try { R.bt = backtestCompare(lr, s); } catch (e) { R.bt = null; }
-  R.lr = lr; R.ms = performance.now() - t0; researchMemo = { key, val: R }; return R;
+  R.lr = lr; R.ms = performance.now() - t0; researchMemo = { rows, sig, val: R }; return R;
 };
 
 const statBox = (k, v, sub) => `<div class="stat"><div class="k">${k}</div><div class="v num">${v}</div><div class="s">${sub || ""}</div></div>`;
@@ -73,7 +72,7 @@ const verdict = (ok, yes, no) => `<span style="color:${ok ? "var(--good)" : "var
 const pv = (p) => p === null || p === undefined ? "—" : (p < 0.0001 ? "<0.0001" : p.toFixed(4));
 let fanH = 21;
 const renderResearch = () => {
-  const root = $("researchRoot"), rows = loadData();
+  const root = $("researchRoot"), rows = viewRows(), vs = state.settings, ut = unitText();
   ["retHist", "volTerm", "fan", "roll"].forEach(destroyChart);
   const R = computeResearch(rows);
   if (R.insufficient) { root.innerHTML = `<div class="card p-5"><h2 class="font-bold mb-2">${t("rs.title")}</h2><p class="muted text-sm mb-3">${t("rs.need", { n: R.n })}</p><button class="btn btn-primary" id="rsDl">${t("b.dl")}</button></div>`; $("rsDl").addEventListener("click", () => { switchTab("data"); downloadHistory($("histRange").value); }); return; }
@@ -81,7 +80,7 @@ const renderResearch = () => {
   const sec = (title, body, sub, hk) => `<div class="card p-4"><h2 class="font-bold mb-1">${title}</h2>${sub ? `<p class="text-xs faint mb-1">${sub}</p>` : ""}${hk ? helpHtml(hk) : '<div class="mb-2"></div>'}${body}</div>`;
   const parts = [];
   // رأس
-  parts.push(`<div class="card p-4"><div class="flex flex-wrap items-center justify-between gap-2"><div><h2 class="font-bold">${t("rs.title")}</h2><p class="text-xs faint">${t("rs.sub", { n: R.n, a: R.from, b: R.to, ms: R.ms.toFixed(0) })}</p></div><button class="btn" id="rsRecalc">${t("rs.recalc")}</button></div>${R.n < 250 ? `<p class="banner banner-warn mt-3 text-sm">${t("rs.few")}</p>` : ""}</div>`);
+  parts.push(`<div class="card p-4"><div class="flex flex-wrap items-center justify-between gap-2"><div><h2 class="font-bold">${t("rs.title")}</h2><p class="text-xs faint">${t("rs.sub", { n: R.n, a: R.from, b: R.to, ms: R.ms.toFixed(0) })}</p><p class="text-xs muted mt-1">${t("rs.viewNote", { c: MARKETS[vs.market].cur, u: t("unit." + vs.unit), k: vs.karat, b: t("st.basis." + vs.basis) })}</p></div><button class="btn" id="rsRecalc">${t("rs.recalc")}</button></div>${R.n < 250 ? `<p class="banner banner-warn mt-3 text-sm">${t("rs.few")}</p>` : ""}</div>`);
   // 1) التوزيع
   const eq = (c) => c ? "var(--bad)" : "var(--good)";
   parts.push(sec(t("rs.dist"), `<div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">${statBox(t("rs.meanAnn"), pct(d.meanAnn, 1), t("rs.logRet"))}${statBox(t("rs.volAnn"), pct(d.volAnn, 1), "σ·√252")}${statBox(t("rs.skew"), d.skew.toFixed(2), d.skew < -0.2 ? t("rs.negSkew") : d.skew > 0.2 ? t("rs.posSkew") : t("rs.symm"))}${statBox(t("rs.kurt"), d.kurt.toFixed(2), d.kurt > 1 ? t("rs.fat") : t("rs.thin"))}
@@ -137,7 +136,7 @@ const renderResearch = () => {
   parts.push(`<div class="card p-4"><h2 class="font-bold mb-2">${t("rs.summary")}</h2><ul class="interp list-disc ps-5">${I.map(x => `<li>${x}</li>`).join("")}</ul></div>`);
   root.innerHTML = parts.join("");
   // أحداث
-  $("rsRecalc").addEventListener("click", () => { researchMemo = { key: null, val: null }; garchMemo = { key: null, val: null }; renderResearch(); });
+  $("rsRecalc").addEventListener("click", () => { researchMemo = { rows: null, sig: null, val: null }; garchMemo = { rows: null, val: null }; renderResearch(); });
   const an = $("rsApplyNu"); if (an) an.addEventListener("click", () => { state.settings.nu = +R.nuEst.toFixed(1); saveSettings(state.settings); refreshAll(true); toast(t("rs.nuApplied", { v: state.settings.nu })); });
   const ug = $("rsUseGarch"); if (ug) ug.addEventListener("click", () => { state.settings.volModel = "garch"; saveSettings(state.settings); refreshAll(true); toast(t("rs.garchOn")); });
   const ar = $("rsApplyReg"); if (ar) ar.addEventListener("click", () => {
@@ -172,9 +171,9 @@ const renderResearch = () => {
         { order: 3, label: "P50", data: col("p50"), borderColor: cssVar("--gold-mid"), borderWidth: 2, pointRadius: 0, fill: false },
         { order: 2, label: "P10", data: col("p10"), borderColor: b80, backgroundColor: b80, borderWidth: 1, pointRadius: 0, fill: "-1" },
         { order: 1, label: "P5", data: col("p5"), borderColor: b90, backgroundColor: b90, borderWidth: 1, pointRadius: 0, fill: "-1" }] },
-        options: { responsive: true, maintainAspectRatio: false, animation: false, interaction: { mode: "index", intersect: false }, plugins: { legend: { position: "bottom", labels: { boxWidth: 12 } }, tooltip: { ...baseTooltip(), callbacks: { title: (it) => `${t("rs.day")} ${it[0].label}`, label: (c) => ` ${c.dataset.label}: ${fmt(c.parsed.y)}` } } }, scales: { x: { reverse: isRTL(), grid: { display: false }, ticks: { maxTicksLimit: 9 } }, y: { position: yPos(), ticks: { callback: (v) => fmt(v, 0) } } } } });
+        options: { responsive: true, maintainAspectRatio: false, animation: false, interaction: { mode: "index", intersect: false }, plugins: { legend: { position: "bottom", labels: { boxWidth: 12 } }, tooltip: { ...baseTooltip(), callbacks: { title: (it) => `${t("rs.day")} ${it[0].label}`, label: (c) => ` ${c.dataset.label}: ${fmt(c.parsed.y)}` } } }, scales: { x: { reverse: isRTL(), grid: { display: false }, ticks: { maxTicksLimit: 9 } }, y: { position: yPos(), title: { display: true, text: ut }, ticks: { callback: (v) => fmt(v, vs.unit === "g" ? 1 : 0) } } } } });
       const fl = fan[fan.length - 1];
-      $("fanTable").innerHTML = `<thead><tr><th>${t("rs.day")} ${fanH}</th>${["P5", "P10", "P50", "P90", "P95"].map(k => `<th>${k}</th>`).join("")}</tr></thead><tbody><tr><td>USD/oz</td>${["p5", "p10", "p50", "p90", "p95"].map(k => `<td><span class="num">${fmt(fl[k])}</span></td>`).join("")}</tr><tr><td>%</td>${["p5", "p10", "p50", "p90", "p95"].map(k => `<td><span class="num" style="color:${fl[k] >= S0 ? "var(--good)" : "var(--bad)"}">${fl[k] >= S0 ? "+" : ""}${pct(fl[k] / S0 - 1, 1)}</span></td>`).join("")}</tr></tbody>`;
+      $("fanTable").innerHTML = `<thead><tr><th>${t("rs.day")} ${fanH}</th>${["P5", "P10", "P50", "P90", "P95"].map(k => `<th>${k}</th>`).join("")}</tr></thead><tbody><tr><td>${ut}</td>${["p5", "p10", "p50", "p90", "p95"].map(k => `<td><span class="num">${fmt(fl[k])}</span></td>`).join("")}</tr><tr><td>%</td>${["p5", "p10", "p50", "p90", "p95"].map(k => `<td><span class="num" style="color:${fl[k] >= S0 ? "var(--good)" : "var(--bad)"}">${fl[k] >= S0 ? "+" : ""}${pct(fl[k] / S0 - 1, 1)}</span></td>`).join("")}</tr></tbody>`;
     };
     drawFan();
     document.querySelectorAll("#fanBtns button").forEach(b => b.addEventListener("click", () => { fanH = +b.dataset.h; document.querySelectorAll("#fanBtns button").forEach(x => x.setAttribute("aria-pressed", String(x === b))); drawFan(); }));

@@ -47,7 +47,7 @@ python3 apps/sync-local.py                              # ويندوز: python a
 |---|---|
 | كلمة سر/كود داخل ملف HTML نفسه | **لا.** الملف يصل كاملاً لأي زائر ويمكنه قراءته وتجاوزها |
 | GitHub Pages | **لا** (الرابط عام لمن يعرفه، والخاص يحتاج GitHub Enterprise) |
-| **Cloudflare Pages + Cloudflare Access** | **نعم.** تسجيل الدخول على الخادم قبل إرسال أي ملف؛ مجاني حتى 50 مستخدماً |
+| **Cloudflare Pages + Cloudflare Access** | **نعم** لكنه مصمم لفرق صغيرة (مجاني حتى 50 مستخدماً). **للمشتركين الأكثر من 50 راجع `ARCHITECTURE.md`** |
 | Netlify مع حماية بكلمة سر / Firebase Hosting + Authentication | نعم (Netlify الحماية في الخطط المدفوعة) |
 
 التوصية: **Cloudflare Pages + Access**. المستخدم يدخل بإيميل مصرَّح له (رمز يصله على بريده أو حساب Google/Microsoft)، وتتحكم أنت بالقائمة.
@@ -68,3 +68,10 @@ python3 apps/sync-local.py                              # ويندوز: python a
 
 ## التثبيت على الآيفون
 افتح الرابط في Safari وسجّل الدخول ← زر المشاركة ← «إضافة إلى الشاشة الرئيسية». يظهر كتطبيق بأيقونته.
+
+## الاختبارات
+```bash
+node apps/gold-quant/tests/calc.test.js    # التحويلات (عملة/وزن/عيار/مصنعية)، EWMA، Monte Carlo، نسبة العدالة، الذاكرة المؤقتة
+node apps/gold-quant/tests/stats.test.js   # GARCH وOLS وADF وEngle–Granger وLjung–Box وهيرست وFHS
+```
+شغّلهما بعد أي تعديل في `src/` ثم `python3 apps/gold-quant/build.py`.

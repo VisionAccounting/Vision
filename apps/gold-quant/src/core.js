@@ -16,9 +16,10 @@ const MARKETS = {
   GL: { cur: "USD", fx: null, prem: null, karats: [24, 22] }
 };
 const MARKET_ORDER = ["SA", "EG", "GL"];
+const KARATS = [24, 22, 21, 18];
 const DEFAULT_SETTINGS = {
   premiumSA: 0, premiumEG: 0, lambda: 0.94, nu: 5, mu: BASE_MU, sigmaMult: 1, nSims: 10000, volModel: "ewma",
-  markets: ["SA", "EG", "GL"], chartRange: 90, refreshMin: 5, autoRow: true, autoHist: true,
+  market: "SA", unit: "g", karat: 24, basis: "local", chartRange: 90, refreshMin: 5, autoRow: true, autoHist: true,
   coeffs: { alpha: 5200, beta1: -450, beta2: -12, beta3: 1.5, beta4: 8 },
   fvInputs: { realYield: 1.8, dxy: 99, cbFlows: 80, geoIndex: 120 }
 };
@@ -45,6 +46,7 @@ const applyStaticI18n = () => {
   document.querySelectorAll("[data-i18n]").forEach(el => { el.textContent = t(el.dataset.i18n); });
   document.querySelectorAll("[data-i18n-tip]").forEach(el => { el.dataset.tip = t(el.dataset.i18nTip); });
   document.querySelectorAll("[data-i18n-ph]").forEach(el => { el.placeholder = t(el.dataset.i18nPh); });
+  document.querySelectorAll("[data-i18n-aria]").forEach(el => { el.setAttribute("aria-label", t(el.dataset.i18nAria)); });
   document.querySelectorAll("[data-i18n-title]").forEach(el => { el.title = t(el.dataset.i18nTitle); });
   $("liveBadge").title = t("help.badge"); $("verInfo").textContent = t("ver.info", { v: APP_VERSION });
   if (state.newVersion) $("updateMsg").textContent = t("upd.msg", { v: state.newVersion });
@@ -88,7 +90,13 @@ const loadData = () => {
   dataCache = { raw, rows }; return rows;
 };
 const addRow = (row) => { const data = loadData().slice(); if (data.some(r => r.date === row.date)) { toast(t("toast.dupDate")); return false; } data.push(row); data.sort((a, b) => a.date < b.date ? -1 : 1); saveData(data); return true; };
-const loadSettings = () => { try { const s = JSON.parse(lsGet(SETTINGS_KEY) || "{}"); const d = clone(DEFAULT_SETTINGS); return { ...d, ...s, coeffs: { ...d.coeffs, ...(s.coeffs || {}) }, fvInputs: { ...d.fvInputs, ...(s.fvInputs || {}) } }; } catch (e) { return clone(DEFAULT_SETTINGS); } };
+const loadSettings = () => { try { const s = JSON.parse(lsGet(SETTINGS_KEY) || "{}"); const d = clone(DEFAULT_SETTINGS); const out = { ...d, ...s, coeffs: { ...d.coeffs, ...(s.coeffs || {}) }, fvInputs: { ...d.fvInputs, ...(s.fvInputs || {}) } };
+    if (s.market === undefined && Array.isArray(s.markets) && MARKETS[s.markets[0]]) out.market = s.markets[0]; // ترحيل الاختيار القديم المتعدد
+    if (!MARKETS[out.market]) out.market = "SA";
+    if (out.unit !== "g" && out.unit !== "oz") out.unit = "g";
+    out.karat = KARATS.includes(+out.karat) ? +out.karat : 24;
+    if (out.basis !== "local" && out.basis !== "usd") out.basis = "local";
+    delete out.markets; return out; } catch (e) { return clone(DEFAULT_SETTINGS); } };
 const saveSettings = (s) => lsSet(SETTINGS_KEY, JSON.stringify(s));
 const loadLive = () => { try { return JSON.parse(lsGet(LIVE_KEY) || "null"); } catch (e) { return null; } };
 const saveLive = (l) => lsSet(LIVE_KEY, JSON.stringify(l));
@@ -126,6 +134,33 @@ const bandAt = (S0, sigma, mu, z) => S0 * Math.exp((mu - 0.5 * sigma * sigma) + 
 function fairValue(realYield, dxy, cbFlows, geoIndex, c) { return c.alpha + c.beta1 * realYield + c.beta2 * dxy + c.beta3 * cbFlows + c.beta4 * geoIndex; }
 // تحويل السعر المحلي للجرام
 function localPrice(goldUsdPerOz, fxRate, karat, premium) { return (goldUsdPerOz / OUNCE_TO_GRAM) * fxRate * (karat / 24) + premium; }
+// ---- عرض الأسعار: عملة السوق المختار × الوحدة (جرام/أونصة) × العيار + المصنعية ----
+const unitFactor = (unit) => (unit === "oz" ? 1 : 1 / OUNCE_TO_GRAM); // من دولار/أونصة إلى سعر الوحدة
+const premFor = (mk, s = state.settings) => { const p = MARKETS[mk].prem; return p ? (+s[p] || 0) : 0; }; // المصنعية دائماً لكل جرام
+const premPerUnit = (mk, unit, s = state.settings) => premFor(mk, s) * (unit === "oz" ? OUNCE_TO_GRAM : 1);
+// سعر العرض = سعر الأونصة بالدولار × الصرف × (العيار/24) × عامل الوحدة + المصنعية (بعد تحويلها للوحدة)
+const toView = (usdOz, fx, v = state.settings) => usdOz * fx * (v.karat / 24) * unitFactor(v.unit) + premPerUnit(v.market, v.unit, v);
+const viewSig = (v = state.settings) => [v.market, v.unit, v.karat, v.basis, v.premiumSA, v.premiumEG].join("|");
+// سلسلة الصرف لكل صف: ملء للأمام ثم للخلف؛ الريال مربوط 3.75 عند غياب القيمة؛ العالمي = 1
+const fxSeries = (rows, mk) => {
+  if (mk === "GL") return rows.map(() => 1);
+  const key = MARKETS[mk].fx, out = new Array(rows.length).fill(null); let last = null;
+  for (let i = 0; i < rows.length; i++) { const v = +rows[i][key]; if (v > 0) last = v; out[i] = last; }
+  let next = null; for (let i = rows.length - 1; i >= 0; i--) { if (out[i] !== null) next = out[i]; else out[i] = next; }
+  return mk === "SA" ? out.map(v => (v > 0 ? v : SAR_PEG)) : out;
+};
+let viewMemo = { rows: null, sig: null, val: null };
+// صفوف العرض: نفس الصفوف لكن gold = سعر العرض (usd = الدولار الأصلي). كل التحليلات المبنية على العوائد تعمل عليها
+const viewRows = (rows = loadData(), s = state.settings) => {
+  const sig = viewSig(s);
+  if (viewMemo.rows === rows && viewMemo.sig === sig) return viewMemo.val;
+  let fx = fxSeries(rows, s.market);
+  if (s.basis === "usd" && s.market !== "GL") { const cur = fx[fx.length - 1]; fx = fx.map(() => cur); } // دولار ثم تحويل بالصرف الحالي
+  const val = [];
+  rows.forEach((r, i) => { if (fx[i] > 0 && +r.gold > 0) val.push({ ...r, usd: +r.gold, fx: fx[i], gold: toView(+r.gold, fx[i], s) }); });
+  viewMemo = { rows, sig, val }; return val;
+};
+const unitText = (s = state.settings) => `${MARKETS[s.market].cur}/${t("unit." + s.unit)}`;
 const logReturns = (rows) => { const out = []; for (let i = 1; i < rows.length; i++) { const a = +rows[i - 1].gold, b = +rows[i].gold; if (a > 0 && b > 0) out.push(Math.log(b / a)); } return out; };
 const classifyFairness = (ratio) => {
   if (!isFinite(ratio)) return { key: "na", label: t("fair.na"), color: "var(--neutral)", icon: "–" };
@@ -134,13 +169,12 @@ const classifyFairness = (ratio) => {
   return { key: "fair", label: t("fair.fair"), color: "var(--neutral)", icon: "●" };
 };
 // GARCH مخزّن مؤقتاً لكل مجموعة بيانات
-let garchMemo = { key: null, val: null };
+let garchMemo = { rows: null, val: null };
 const getGarch = (rows) => {
-  const last = rows[rows.length - 1], key = rows.length + "|" + (last && last.date) + "|" + (last && last.gold);
-  if (garchMemo.key === key) return garchMemo.val;
+  if (garchMemo.rows === rows) return garchMemo.val;
   const lr = logReturns(rows); let val = null;
   if (lr.length >= 250) { try { val = garchFit(lr.slice(-1500)); } catch (e) { val = null; } }
-  garchMemo = { key, val }; return val;
+  garchMemo = { rows, val }; return val;
 };
 // تقدير sigma: EWMA من آخر 30 عائداً أو GARCH عند توفر بيانات كافية
 const estimateSigma = (rows, s, { ewmaOnly = false } = {}) => {
@@ -152,19 +186,20 @@ const estimateSigma = (rows, s, { ewmaOnly = false } = {}) => {
 
 // ===================== الحالة المرجعية =====================
 const currentRef = () => {
-  const rows = loadData(), live = loadLive(), last = rows[rows.length - 1];
+  const s = state.settings, rows = loadData(), live = loadLive(), last = rows[rows.length - 1], rowsV = viewRows(rows, s);
   const liveDate = live && live.updatedAt ? String(live.updatedAt).slice(0, 10) : null;
   const useLive = live && live.price && (!last || (liveDate && liveDate >= last.date));
-  const price = useLive ? live.price : (last ? +last.gold : null);
+  const priceUsd = useLive ? live.price : (last ? +last.gold : null);
   const sar = (useLive && live.sar) || lastNonNull(rows, "sar") || SAR_PEG;
   const egp = (useLive && live.egp) || lastNonNull(rows, "egp") || null;
-  let prev = null;
-  if (useLive && last) prev = (liveDate === last.date) ? (rows.length > 1 ? +rows[rows.length - 2].gold : null) : +last.gold;
-  else if (rows.length > 1) prev = +rows[rows.length - 2].gold;
-  return { price, prev, sar, egp, source: useLive ? "live" : (last ? "data" : "none"), live, last, rows };
+  const fxNow = s.market === "SA" ? sar : s.market === "EG" ? egp : 1;
+  const vl = rowsV[rowsV.length - 1], vp = rowsV[rowsV.length - 2];
+  let prevUsd = null, prev = null;
+  if (useLive && last) { if (liveDate === last.date) { prevUsd = rows.length > 1 ? +rows[rows.length - 2].gold : null; prev = vp ? vp.gold : null; } else { prevUsd = +last.gold; prev = vl ? vl.gold : null; } }
+  else if (rows.length > 1) { prevUsd = +rows[rows.length - 2].gold; prev = vp ? vp.gold : null; }
+  const price = useLive ? ((priceUsd && fxNow) ? toView(priceUsd, fxNow, s) : null) : (vl ? vl.gold : null);
+  return { price, prev, priceUsd, prevUsd, fxNow, sar, egp, source: useLive ? "live" : (last ? "data" : "none"), live, last, rows, rowsV };
 };
-const fxFor = (mk, ref) => mk === "SA" ? ref.sar : mk === "EG" ? ref.egp : 1;
-const premFor = (mk) => { const p = MARKETS[mk].prem; return p ? (+state.settings[p] || 0) : 0; };
 
 // ===================== الجلب من الشبكة =====================
 async function fetchWithProxy(url, { timeout = 7000, as = "json", proxyFirst = false } = {}) {

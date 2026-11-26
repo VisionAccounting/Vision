@@ -1,5 +1,6 @@
 <body class="min-h-screen">
 <header class="hdr">
+  <div id="fxBar" class="fxbar" role="region" data-i18n-aria="fx.aria"></div>
   <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
     <div class="flex items-center gap-3">
       <div class="logo">Au</div>
@@ -33,15 +34,21 @@
 <main class="max-w-7xl mx-auto px-4 py-5 space-y-4">
   <div id="banners" class="space-y-2"></div>
 
+  <!-- شريط العرض: الدولة والوزن والعيار تحكم كل الأسعار والتحليلات والرسوم -->
+  <section id="viewBar" class="card p-3 viewbar" role="group" data-i18n-aria="view.aria">
+    <div class="flex flex-wrap items-end gap-3">
+      <div><label class="lbl" for="selMarket" data-i18n="view.country"></label><select id="selMarket" class="inp"></select></div>
+      <div><label class="lbl" for="selUnit" data-i18n="view.unit"></label><select id="selUnit" class="inp"></select></div>
+      <div><label class="lbl" for="selKarat" data-i18n="view.karat"></label><select id="selKarat" class="inp"></select></div>
+      <p id="viewSummary" class="text-xs muted basis-full sm:basis-auto sm:flex-1 pb-2"></p>
+    </div>
+    <div data-help="help.markets"></div>
+  </section>
+
   <!-- ===== الرئيسية ===== -->
   <section id="tab-dashboard" class="tab space-y-4">
     <div data-help="help.tab.dashboard"></div>
-    <div class="card p-4">
-      <div class="mb-3"><h2 class="font-bold" data-i18n="mk.title"></h2><p class="text-xs faint" data-i18n="mk.hint"></p></div>
-      <div data-help="help.markets"></div>
-      <div id="marketChips" class="flex flex-wrap gap-2" role="group"></div>
-    </div>
-    <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4" id="kpis"></div>
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4" id="kpis"></div>
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
       <div class="card p-4 lg:col-span-2">
         <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
@@ -220,7 +227,8 @@
         <div><label class="lbl flex items-center gap-2">nu (t) <span class="tip" tabindex="0" data-i18n-tip="st.nu.tip">?</span></label><input type="number" step="0.5" min="2.1" id="sNu" class="inp"></div>
         <div><label class="lbl flex items-center gap-2"><span data-i18n="st.mult"></span> <span class="tip" tabindex="0" data-i18n-tip="st.mult.tip">?</span></label><input type="number" step="0.01" min="0.1" id="sMult" class="inp"></div>
         <div><label class="lbl" data-i18n="st.n"></label><input type="number" step="1000" min="1000" max="100000" id="sN" class="inp"></div>
-        <div><label class="lbl" data-i18n="st.volModel"></label><select id="sVolModel" class="inp"><option value="ewma">EWMA</option><option value="garch">GARCH(1,1)</option></select></div>
+        <div><label class="lbl" for="sVolModel" data-i18n="st.volModel"></label><select id="sVolModel" class="inp"><option value="ewma">EWMA</option><option value="garch">GARCH(1,1)</option></select></div>
+        <div><label class="lbl" for="sBasis" data-i18n="st.basis"></label><select id="sBasis" class="inp"><option value="local" data-i18n="st.basis.local"></option><option value="usd" data-i18n="st.basis.usd"></option></select></div>
       </div>
     </div>
     <div class="card p-4">

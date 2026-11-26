@@ -1,14 +1,20 @@
 // ===================== الحسابات المركبة =====================
 const runSimulation = () => {
   const ref = currentRef(), s = state.settings;
-  state.sigmaInfo = estimateSigma(ref.rows, s);
-  state.S0 = ref.price; state.fx = { sar: ref.sar, egp: ref.egp };
+  state.sigmaInfo = estimateSigma(ref.rowsV, s);
+  state.S0 = ref.price; state.S0usd = ref.priceUsd; state.fx = { sar: ref.sar, egp: ref.egp, now: ref.fxNow };
   if (!ref.price) { state.mc = null; return; }
   const t0 = performance.now();
   state.mc = monteCarlo(ref.price, state.sigmaInfo.sigma, s.mu, s.nu, Math.round(s.nSims));
   state.mcMs = performance.now() - t0;
 };
-const currentFair = () => { const s = state.settings, v = s.fvInputs; const fv = fairValue(+v.realYield, +v.dxy, +v.cbFlows, +v.geoIndex, s.coeffs); const ratio = (state.S0 && fv > 0) ? state.S0 / fv : NaN; return { fv, ratio, cls: classifyFairness(ratio) }; };
+// القيمة العادلة بالدولار/أونصة (نموذج عالمي)، ونسبة العدالة بالدولار، ومعادلها بعملة العرض
+const currentFair = () => {
+  const s = state.settings, v = s.fvInputs, fv = fairValue(+v.realYield, +v.dxy, +v.cbFlows, +v.geoIndex, s.coeffs);
+  const ratio = (state.S0usd && fv > 0) ? state.S0usd / fv : NaN, fx = currentRef().fxNow;
+  return { fv, ratio, cls: classifyFairness(ratio), fvView: (fv > 0 && fx) ? toView(fv, fx, s) : null };
+};
+const fmtV = (x) => fmt(x, state.settings.unit === "g" ? 2 : 1);
 // إشارة التداول: العدالة + موقع السعر من نطاق الأمس + الانحياز اليدوي
 const tradingSignal = () => {
   const reasons = []; let score = 0; const fair = currentFair(), r = isFinite(fair.ratio) ? fair.ratio.toFixed(3) : "";
@@ -22,7 +28,7 @@ const tradingSignal = () => {
   const ref = currentRef(), s = state.settings;
   if (ref.price && ref.prev) {
     const sameDay = ref.source === "live" && ref.last && String(ref.live.updatedAt).slice(0, 10) === ref.last.date;
-    const rowsPrev = (ref.source === "live" && ref.last && !sameDay) ? ref.rows : ref.rows.slice(0, -1);
+    const rowsPrev = (ref.source === "live" && ref.last && !sameDay) ? ref.rowsV : ref.rowsV.slice(0, -1);
     const sg = estimateSigma(rowsPrev, s, { ewmaOnly: true }).sigma, q = tStdQuantiles(s.nu);
     const b = { p5: bandAt(ref.prev, sg, BASE_MU, q[0.05]), p10: bandAt(ref.prev, sg, BASE_MU, q[0.1]), p90: bandAt(ref.prev, sg, BASE_MU, q[0.9]), p95: bandAt(ref.prev, sg, BASE_MU, q[0.95]) };
     if (ref.price > b.p95) { score -= 1; reasons.push(t("sg.aboveP95", { v: fmt(b.p95) })); }
@@ -37,7 +43,7 @@ const tradingSignal = () => {
 };
 // الاختبار الرجعي (EWMA): نطاق P10–P90 لكل يوم من بيانات اليوم السابق فقط
 const runBacktest = (mult = state.settings.sigmaMult) => {
-  const rows = loadData(), s = state.settings, r = logReturns(rows), q = tStdQuantiles(s.nu), pts = [];
+  const rows = viewRows(), s = state.settings, r = logReturns(rows), q = tStdQuantiles(s.nu), pts = [];
   for (let i = 6; i < rows.length; i++) {
     const hist = r.slice(Math.max(0, i - 1 - 30), i - 1); if (hist.length < 5) continue;
     const sg = ewmaSigma(hist, s.lambda) * mult, S0 = +rows[i - 1].gold, St = +rows[i].gold;
@@ -54,23 +60,23 @@ const baseTooltip = () => ({ backgroundColor: cssVar("--ink"), titleColor: cssVa
 const yPos = () => (isRTL() ? "right" : "left");
 const renderHistoryChart = () => {
   destroyChart("history");
-  const all = loadData(), rng = state.settings.chartRange, rows = rng ? all.slice(-rng) : all;
+  const all = viewRows(), rng = state.settings.chartRange, rows = rng ? all.slice(-rng) : all, ut = unitText();
   $("historyEmpty").classList.toggle("hidden", rows.length > 0);
   document.querySelectorAll("#rangeBtns button").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.r === rng)));
   if (!window.Chart || !rows.length) return;
-  const gold = cssVar("--gold"), big = rows.length > 200;
+  const gold = cssVar("--gold"), big = rows.length > 200, tdp = state.settings.unit === "g" ? 1 : 0;
   state.charts.history = new Chart($("chartHistory"), {
     type: "line",
-    data: { labels: rows.map(r => r.date), datasets: [{ label: t("ch.series"), data: rows.map(r => +r.gold), borderColor: gold, backgroundColor: gold, borderWidth: big ? 1.6 : 2, pointRadius: 0, pointHoverRadius: 5, tension: 0.15 }] },
+    data: { labels: rows.map(r => r.date), datasets: [{ label: t("ch.series", { s: ut }), data: rows.map(r => r.gold), borderColor: gold, backgroundColor: gold, borderWidth: big ? 1.6 : 2, pointRadius: 0, pointHoverRadius: 5, tension: 0.15 }] },
     options: { responsive: true, maintainAspectRatio: false, animation: false, interaction: { mode: "index", intersect: false },
-      plugins: { legend: { display: false }, tooltip: { ...baseTooltip(), callbacks: { label: (c) => ` ${fmt(c.parsed.y)} $` } } },
-      scales: { x: { reverse: isRTL(), grid: { display: false }, ticks: { maxTicksLimit: 7, callback: function (v) { const l = this.getLabelForValue(v); return rows.length > 150 ? l.slice(0, 7) : l.slice(5); } } }, y: { position: yPos(), ticks: { callback: (v) => fmt(v, 0) } } } }
+      plugins: { legend: { display: false }, tooltip: { ...baseTooltip(), callbacks: { label: (c) => ` ${fmt(c.parsed.y)} ${ut}` } } },
+      scales: { x: { reverse: isRTL(), grid: { display: false }, ticks: { maxTicksLimit: 7, callback: function (v) { const l = this.getLabelForValue(v); return rows.length > 150 ? l.slice(0, 7) : l.slice(5); } } }, y: { position: yPos(), title: { display: true, text: ut }, ticks: { callback: (v) => fmt(v, tdp) } } } }
   });
 };
 const renderBoxChart = () => {
   destroyChart("box"); destroyChart("hist");
   const mc = state.mc; if (!window.Chart || !mc) return;
-  const span = mc.p95 - mc.p5, eps = span * 0.004, lab = t("fc.global");
+  const span = mc.p95 - mc.p5, eps = span * 0.004, lab = unitText(), tdp = state.settings.unit === "g" ? 1 : 0;
   state.charts.box = new Chart($("chartBox"), {
     type: "bar",
     data: { labels: [lab], datasets: [
@@ -80,15 +86,15 @@ const renderBoxChart = () => {
       { order: 1, type: "scatter", label: t("bx.cur"), data: [{ x: state.S0, y: lab }], pointStyle: "rectRot", pointRadius: 7, pointHoverRadius: 9, backgroundColor: cssVar("--ink"), borderColor: cssVar("--surface"), borderWidth: 2 }] },
     options: { indexAxis: "y", responsive: true, maintainAspectRatio: false, datasets: { bar: { grouped: false } },
       plugins: { legend: { position: "bottom", labels: { boxWidth: 12, usePointStyle: true } }, tooltip: { ...baseTooltip(), callbacks: { label: (c) => { const v = c.raw; if (Array.isArray(v)) return c.dataset.label === t("bx.p50") ? ` P50: ${fmt(mc.p50)}` : ` ${c.dataset.label}: ${fmt(v[0])} – ${fmt(v[1])}`; return ` ${t("bx.cur")}: ${fmt(state.S0)}`; } } } },
-      scales: { x: { min: mc.p5 - span * 0.15, max: mc.p95 + span * 0.15, reverse: isRTL(), ticks: { callback: (v) => fmt(v, 0) } }, y: { grid: { display: false } } } }
+      scales: { x: { min: mc.p5 - span * 0.15, max: mc.p95 + span * 0.15, reverse: isRTL(), title: { display: true, text: lab }, ticks: { callback: (v) => fmt(v, tdp) } }, y: { grid: { display: false } } } }
   });
   const bins = 40, lo = percentile(mc.all, 0.005), hi = percentile(mc.all, 0.995), w = (hi - lo) / bins, counts = new Array(bins).fill(0);
   mc.all.forEach(x => { const i = Math.floor((x - lo) / w); if (i >= 0 && i < bins) counts[i]++; });
   const centers = counts.map((_, i) => lo + (i + 0.5) * w);
   state.charts.hist = new Chart($("chartHist"), {
     type: "bar",
-    data: { labels: centers.map(c => fmt(c, 0)), datasets: [{ label: t("bx.count"), data: counts, backgroundColor: centers.map(c => (c >= mc.p10 && c <= mc.p90) ? cssVar("--gold-band-80") : cssVar("--gold-band-90")), borderRadius: 2, barPercentage: 1, categoryPercentage: 0.92 }] },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { ...baseTooltip(), callbacks: { title: (it) => `≈ ${it[0].label} $`, label: (c) => ` ${c.parsed.y} (${pct(c.parsed.y / mc.all.length)})` } } }, scales: { x: { reverse: isRTL(), grid: { display: false }, ticks: { maxTicksLimit: 6 } }, y: { display: false } } }
+    data: { labels: centers.map(c => fmt(c, tdp)), datasets: [{ label: t("bx.count"), data: counts, backgroundColor: centers.map(c => (c >= mc.p10 && c <= mc.p90) ? cssVar("--gold-band-80") : cssVar("--gold-band-90")), borderRadius: 2, barPercentage: 1, categoryPercentage: 0.92 }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { ...baseTooltip(), callbacks: { title: (it) => `≈ ${it[0].label} ${lab}`, label: (c) => ` ${c.parsed.y} (${pct(c.parsed.y / mc.all.length)})` } } }, scales: { x: { reverse: isRTL(), grid: { display: false }, ticks: { maxTicksLimit: 6 } }, y: { display: false } } }
   });
 };
 const renderBacktestChart = (pts) => {
@@ -102,7 +108,7 @@ const renderBacktestChart = (pts) => {
       { order: 1, label: t("bt.actual"), data: view.map(p => p.price), borderColor: cssVar("--gold"), borderWidth: 2, tension: 0.1, pointRadius: view.map(p => p.hit ? 4 : 0), pointBackgroundColor: view.map(p => p.hit ? cssVar("--bad") : cssVar("--gold")), pointBorderColor: cssVar("--surface"), pointBorderWidth: 1.5 }] },
     options: { responsive: true, maintainAspectRatio: false, animation: false, interaction: { mode: "index", intersect: false },
       plugins: { legend: { position: "bottom", labels: { boxWidth: 12 } }, tooltip: { ...baseTooltip(), callbacks: { label: (c) => ` ${c.dataset.label}: ${fmt(c.parsed.y)}`, afterBody: (it) => view[it[0].dataIndex].hit ? t("bt.breach") : "" } } },
-      scales: { x: { reverse: isRTL(), grid: { display: false }, ticks: { maxTicksLimit: 8 } }, y: { position: yPos(), ticks: { callback: (v) => fmt(v, 0) } } } }
+      scales: { x: { reverse: isRTL(), grid: { display: false }, ticks: { maxTicksLimit: 8 } }, y: { position: yPos(), title: { display: true, text: unitText() }, ticks: { callback: (v) => fmt(v, state.settings.unit === "g" ? 1 : 0) } } } }
   });
 };
 
@@ -113,7 +119,6 @@ const kpiCard = (title, value, unit, sub, subColor, badge, cls = "") => `
     <div class="mt-1 text-xl sm:text-2xl font-bold kv"><span class="num">${value}</span> <span class="num text-xs sm:text-sm faint font-normal">${unit}</span></div>
     <div class="text-xs mt-1" style="color:${subColor || "var(--ink-3)"}">${sub || "&nbsp;"}</div>
   </div>`;
-const selMarkets = () => MARKET_ORDER.filter(m => state.settings.markets.includes(m));
 
 const renderBanners = () => {
   const out = [], ref = currentRef(), n = ref.rows.length;
@@ -122,35 +127,48 @@ const renderBanners = () => {
   if (state.liveErr) out.push(`<div class="banner banner-warn">⚠ ${escHtml(liveErrText())}</div>`);
   else if (ref.source === "data" && ref.last) out.push(`<div class="banner banner-info">ℹ ${t("b.lastKnown", { d: ref.last.date })}</div>`);
   if (ref.source === "none") out.push(`<div class="banner banner-info">ℹ ${t("b.noPrice")}</div>`);
-  if (selMarkets().includes("EG") && !ref.egp && ref.source !== "none") out.push(`<div class="banner banner-warn">⚠ ${t("b.noEgp")}</div>`);
+  if (state.settings.market === "EG" && !ref.egp && ref.source !== "none") out.push(`<div class="banner banner-warn">⚠ ${t("b.noEgp")}</div>`);
   $("banners").innerHTML = out.join("");
   const b = $("btnBannerHist"); if (b) b.addEventListener("click", () => { switchTab("data"); downloadHistory($("histRange").value); });
 };
-const renderMarketChips = () => {
-  const sel = state.settings.markets;
-  $("marketChips").innerHTML = MARKET_ORDER.map(m => `<button type="button" class="chip" data-mk="${m}" aria-pressed="${sel.includes(m)}"><span class="box">${sel.includes(m) ? "✓" : ""}</span><span>${t("mk." + m)}</span><span class="mk">${MARKETS[m].cur}</span></button>`).join("");
-  document.querySelectorAll("#marketChips .chip").forEach(b => b.addEventListener("click", () => {
-    const m = b.dataset.mk, cur = state.settings.markets;
-    if (cur.includes(m)) { if (cur.length === 1) { toast(t("mk.min")); return; } state.settings.markets = cur.filter(x => x !== m); } else state.settings.markets = [...cur, m];
-    saveSettings(state.settings); renderBanners(); renderMarketChips(); renderDashboard(); renderForecast(); renderFair();
-  }));
+// شريط العرض: الدولة/الوزن/العيار (القوائم لا تُعاد بناؤها إلا عند تغيير اللغة حفاظاً على تركيز لوحة المفاتيح)
+const renderViewBar = (rebuild = false) => {
+  const s = state.settings;
+  if (rebuild || !$("selMarket").options.length) {
+    $("selMarket").innerHTML = MARKET_ORDER.map(m => `<option value="${m}">${t("mk." + m)} · ${MARKETS[m].cur}</option>`).join("");
+    $("selUnit").innerHTML = ["g", "oz"].map(u => `<option value="${u}">${t("unit." + u)}</option>`).join("");
+    $("selKarat").innerHTML = KARATS.map(k => `<option value="${k}">${k}K</option>`).join("");
+  }
+  $("selMarket").value = s.market; $("selUnit").value = s.unit; $("selKarat").value = String(s.karat);
+  $("viewSummary").textContent = t("view.summary", { c: MARKETS[s.market].cur, u: t("unit." + s.unit), k: s.karat });
 };
+// شريط أسعار الصرف مقابل الدولار (أعلى الشاشة، على اليسار): الذهب والريال والجنيه ومؤشر الدولار
+const fxItem = (sym, val, chg) => `<span class="fxi"><span class="sym">${sym}</span><span class="px">${val}</span>${chg === null ? "" : `<span class="chg ${chg > 5e-5 ? "up" : chg < -5e-5 ? "down" : "flat"}">${chg > 5e-5 ? "▲" : chg < -5e-5 ? "▼" : "■"} ${Math.abs(chg * 100).toFixed(2)}%</span>`}</span>`;
+const renderFxBar = () => {
+  const ref = currentRef(), rows = ref.rows, last = rows[rows.length - 1];
+  const liveDate = ref.live && ref.live.updatedAt ? String(ref.live.updatedAt).slice(0, 10) : null;
+  const prevRow = ref.source === "live" ? (last && liveDate === last.date ? rows[rows.length - 2] : last) : rows[rows.length - 2];
+  const ch = (a, b) => (a > 0 && b > 0) ? a / b - 1 : null, pv = (k) => (prevRow ? +prevRow[k] : null), dxy = lastNonNull(rows, "dxy");
+  const items = [fxItem("XAU/USD", ref.priceUsd ? fmt(ref.priceUsd) : "—", ch(ref.priceUsd, ref.prevUsd)), fxItem("USD/SAR", fmt(ref.sar, 4), ch(ref.sar, pv("sar"))), fxItem("USD/EGP", ref.egp ? fmt(ref.egp, 4) : "—", ch(ref.egp, pv("egp")))];
+  if (dxy) items.push(fxItem("DXY", fmt(dxy, 2), ch(dxy, prevRow && +prevRow.dxy)));
+  $("fxBar").innerHTML = `<div class="row max-w-7xl mx-auto px-4">${items.join("")}</div>`;
+};
+// ربط كل تسمية (label) بحقلها لقارئات الشاشة
+const labelize = () => document.querySelectorAll("label.lbl").forEach(l => { if (l.htmlFor) return; const c = l.parentElement && l.parentElement.querySelector("input,select,textarea"); if (c) { if (!c.id) c.id = "f_" + Math.random().toString(36).slice(2, 8); l.htmlFor = c.id; } });
+
 const renderDashboard = () => {
-  const ref = currentRef(), s = state.settings, mk = selMarkets();
+  const ref = currentRef(), s = state.settings, mk = s.market, cur = MARKETS[mk].cur, ut = unitText(), other = s.unit === "g" ? "oz" : "g";
   const chg = (ref.price && ref.prev) ? ref.price / ref.prev - 1 : null;
   const chgTxt = chg === null ? t("k.noPrev") : `${chg >= 0 ? "▲" : "▼"} ${pct(Math.abs(chg), 2)} ${t("k.today")}`, chgCol = chg === null ? null : (chg >= 0 ? "var(--good)" : "var(--bad)");
   const src = ref.source === "live" ? `${t("k.live")} · ${escHtml(srcName(ref.live.source))}` : (ref.last ? `${t("k.lastKnown")} · ${ref.last.date}` : "");
-  const cards = [], g = t("u.g");
-  mk.forEach(m => {
-    if (m === "GL") {
-      cards.push(kpiCard(t("k.oz"), ref.price ? fmt(ref.price) : "—", "USD/oz", `<span style="color:${chgCol || "var(--ink-3)"}">${chgTxt}</span> <span class="faint">· ${src}</span>`, null, "USD"));
-      cards.push(kpiCard(t("k.g", { k: 24 }), ref.price ? fmt(localPrice(ref.price, 1, 24, 0)) : "—", "USD/" + g, "", null, "USD"));
-    } else {
-      const fx = fxFor(m, ref), prem = premFor(m), cur = MARKETS[m].cur;
-      [24, 22].forEach(k => cards.push(kpiCard(t("k.g", { k }), (ref.price && fx) ? fmt(localPrice(ref.price, fx, k, prem)) : "—", cur + "/" + g, fx ? `${t("k.fx")} ${fmt(fx, 4)} · ${t("k.prem")} ${fmt(prem)}` : t("k.noFx"), null, cur)));
-    }
-  });
-  $("kpis").innerHTML = cards.join("");
+  const fx = ref.fxNow, prem = premFor(mk), fair0 = currentFair();
+  const otherPrice = (ref.priceUsd && fx) ? toView(ref.priceUsd, fx, { ...s, unit: other }) : null;
+  $("kpis").innerHTML = [
+    kpiCard(t("k.price", { u: t("unit." + s.unit), k: s.karat }), ref.price ? fmt(ref.price) : "—", ut, `<span style="color:${chgCol || "var(--ink-3)"}">${chgTxt}</span> <span class="faint">· ${src}</span>`, null, cur),
+    kpiCard(t("k.other", { u: t("unit." + other) }), otherPrice ? fmt(otherPrice) : "—", `${cur}/${t("unit." + other)}`, mk === "GL" ? "&nbsp;" : (fx ? `${t("k.fx")} USD/${cur} ${fmt(fx, 4)} · ${t("k.prem")} ${fmt(prem)}` : t("k.noFx")), null, cur),
+    kpiCard(t("k.spot"), ref.priceUsd ? fmt(ref.priceUsd) : "—", "USD/oz", "&nbsp;", null, "USD"),
+    kpiCard(t("fair.ratio"), isFinite(fair0.ratio) ? fair0.ratio.toFixed(3) : "—", "", `<span style="color:${fair0.cls.color}">${fair0.cls.icon} ${fair0.cls.label}</span>${fair0.fvView ? ` · ${t("fv.fvLabel")} ${fmt(fair0.fvView)}` : ""}`, null, "")
+  ].join("");
   if (ref.price && state.shownPrice !== undefined && state.shownPrice !== ref.price) document.querySelectorAll("#kpis .card").forEach(c => { c.classList.remove("flash"); void c.offsetWidth; c.classList.add("flash"); });
   state.shownPrice = ref.price;
 
@@ -169,17 +187,17 @@ const renderDashboard = () => {
   const mc = state.mc, si = state.sigmaInfo;
   $("miniStats").innerHTML =
     kpiCard(t("ms.sigma"), si ? pct(si.sigma, 2) : "—", "σ", si ? (si.isDefault ? t("ms.sigmaDef") : `${si.model === "garch" ? "GARCH(1,1)" : "EWMA"} · ${t("ms.from", { n: si.n })}${s.sigmaMult !== 1 ? " · ×" + s.sigmaMult : ""}`) : "", si && si.isDefault ? "var(--warn)" : null) +
-    kpiCard(t("ms.band80"), mc ? `${fmt(mc.p10, 0)} – ${fmt(mc.p90, 0)}` : "—", "USD", mc ? `${t("ms.band90")}: ${fmt(mc.p5, 0)} – ${fmt(mc.p95, 0)}` : "") +
+    kpiCard(t("ms.band80"), mc ? `${fmtV(mc.p10)} – ${fmtV(mc.p90)}` : "—", ut, mc ? `${t("ms.band90")}: ${fmtV(mc.p5)} – ${fmtV(mc.p95)}` : "") +
     kpiCard(t("ms.data"), String(ref.rows.length), t("ms.days"), ref.rows.length ? `${ref.rows[0].date} → ${ref.rows[ref.rows.length - 1].date}` : "");
   renderHistoryChart();
 };
 
 const renderForecast = () => {
-  const mc = state.mc, s = state.settings; $("inMu").value = s.mu;
+  const mc = state.mc, s = state.settings, ut = unitText(); $("inMu").value = s.mu;
   if (!mc) { $("tblGlobalBands").innerHTML = `<tr><td class="faint">${t("fc.noPrice")}</td></tr>`; $("tblLocal").innerHTML = ""; $("probStats").innerHTML = ""; $("simMeta").textContent = ""; renderBoxChart(); return; }
   const S0 = state.S0;
   const rowsP = [["P5", mc.p5, "fc.d5"], ["P10", mc.p10, "fc.d10"], ["P50", mc.p50, "fc.d50"], ["P90", mc.p90, "fc.d90"], ["P95", mc.p95, "fc.d95"]];
-  $("tblGlobalBands").innerHTML = `<thead><tr><th>${t("fc.pct")}</th><th>$/oz</th><th>${t("fc.chg")}</th><th>${t("fc.mean")}</th></tr></thead><tbody>` + rowsP.map(([k, v, d]) => `<tr><td class="font-semibold">${k}</td><td><span class="num">${fmt(v)}</span></td><td><span class="num" style="color:${v >= S0 ? "var(--good)" : "var(--bad)"}">${v >= S0 ? "+" : ""}${pct(v / S0 - 1, 2)}</span></td><td class="muted">${t(d)}</td></tr>`).join("") + `</tbody>`;
+  $("tblGlobalBands").innerHTML = `<thead><tr><th>${t("fc.pct")}</th><th>${ut}</th><th>${t("fc.chg")}</th><th>${t("fc.mean")}</th></tr></thead><tbody>` + rowsP.map(([k, v, d]) => `<tr><td class="font-semibold">${k}</td><td><span class="num">${fmt(v)}</span></td><td><span class="num" style="color:${v >= S0 ? "var(--good)" : "var(--bad)"}">${v >= S0 ? "+" : ""}${pct(v / S0 - 1, 2)}</span></td><td class="muted">${t(d)}</td></tr>`).join("") + `</tbody>`;
   const N = mc.all.length, above90 = mc.all.filter(x => x > mc.p90).length / N, below10 = mc.all.filter(x => x < mc.p10).length / N, up = mc.all.filter(x => x > S0).length / N;
   const target = num($("inTarget").value), pT = target ? mc.all.filter(x => x > target).length / N : null, hist = state.backtest;
   const stat = (k, v, sub) => `<div class="stat"><div class="k">${k}</div><div class="v num">${v}</div><div class="s">${sub || ""}</div></div>`;
@@ -187,12 +205,10 @@ const renderForecast = () => {
     stat(t("pr.up"), pct(up), `${t("pr.cur")} ${fmt(S0)}`) + stat(t("pr.target"), pT === null ? "—" : pct(pT), target ? `${t("pr.tg")} ${fmt(target)}` : t("pr.enterTarget"));
   const si = state.sigmaInfo;
   $("simMeta").textContent = `${N.toLocaleString("en-US")} · σ=${pct(si.sigma, 2)} (${si.model === "garch" ? "GARCH" : si.isDefault ? t("ms.sigmaDef") : "EWMA"}) · nu=${s.nu} · mu=${s.mu} · ${state.mcMs ? state.mcMs.toFixed(0) + "ms" : ""}`;
-  const keys = ["p5", "p10", "p50", "p90", "p95"], ref = currentRef(), lines = [];
-  lines.push({ c: t("mk.GL"), u: "USD", k: "oz", fx: 1, prem: 0 });
-  selMarkets().forEach(m => { const fx = fxFor(m, ref); if (!fx) return; MARKETS[m].karats.forEach(k => lines.push({ c: t("mk." + m), u: MARKETS[m].cur, k, fx, prem: premFor(m) })); });
-  const seen = new Set(); const rowsL = lines.filter(l => selMarkets().includes("GL") || l.k !== "oz");
-  $("tblLocal").innerHTML = rowsL.length ? `<thead><tr><th>${t("lc.market")}</th><th>${t("lc.karat")}</th><th>${t("lc.cur")}</th><th>${t("pr.cur")}</th>${keys.map(k => `<th>${k.toUpperCase()}</th>`).join("")}</tr></thead><tbody>` +
-    rowsL.map(l => { const f = (v) => l.k === "oz" ? v : localPrice(v, l.fx, l.k, l.prem); return `<tr><td>${l.c}</td><td>${l.k === "oz" ? "XAU/oz" : l.k + (l.k === 21 || l.k === 18 ? ` <span class="faint text-xs">(${t("lc.extra")})</span>` : "")}</td><td>${l.u}</td><td class="font-semibold"><span class="num">${fmt(f(S0))}</span></td>${keys.map(k => `<td><span class="num">${fmt(f(mc[k]))}</span></td>`).join("")}</tr>`; }).join("") + `</tbody>` : `<tr><td class="faint">${t("k.noFx")}</td></tr>`;
+  // الأسعار حسب العيار: (القيمة − المصنعية) × k/عيار_العرض + المصنعية (تحويل خطي دقيق)
+  const prem = premPerUnit(s.market, s.unit, s), byK = (v, k) => (v - prem) * k / s.karat + prem, keys = ["p5", "p10", "p50", "p90", "p95"], ref = currentRef();
+  $("tblLocal").innerHTML = `<thead><tr><th>${t("lc.karat")}</th><th>${t("pr.cur")} (${ut})</th>${keys.map(k => `<th>${k.toUpperCase()}</th>`).join("")}</tr></thead><tbody>` +
+    KARATS.map(k => `<tr><td>${k}K${k === s.karat ? " ✓" : ""}</td><td class="font-semibold"><span class="num">${fmt(byK(S0, k))}</span></td>${keys.map(q => `<td><span class="num">${fmt(byK(mc[q], k))}</span></td>`).join("")}</tr>`).join("") + `</tbody>`;
   $("localMeta").textContent = t("lc.meta", { sar: fmt(ref.sar, 4), egp: fmt(ref.egp, 4), pa: fmt(s.premiumSA), pe: fmt(s.premiumEG) });
   renderBoxChart();
 };
@@ -203,22 +219,19 @@ const renderFairInputs = () => {
   $("coeffInputs").innerHTML = cf.map(([k, l]) => `<div><label class="lbl">${t(l)}</label><input type="number" step="any" class="inp" data-coeff="${k}" value="${s.coeffs[k]}"></div>`).join("");
   const vr = [["realYield", "fv.ry"], ["dxy", "fv.dxy"], ["cbFlows", "fv.cb"], ["geoIndex", "fv.geo"]];
   $("varInputs").innerHTML = vr.map(([k, l]) => `<div><label class="lbl">${t(l)}</label><input type="number" step="any" class="inp" data-fv="${k}" value="${s.fvInputs[k]}"></div>`).join("");
+  labelize();
   document.querySelectorAll("[data-coeff]").forEach(el => el.addEventListener("input", () => { const v = num(el.value); if (v !== null) { state.settings.coeffs[el.dataset.coeff] = v; saveSettings(state.settings); renderFair(); renderDashboard(); } }));
   document.querySelectorAll("[data-fv]").forEach(el => el.addEventListener("input", () => { const v = num(el.value); if (v !== null) { state.settings.fvInputs[el.dataset.fv] = v; saveSettings(state.settings); renderFair(); renderDashboard(); } }));
 };
 const renderFair = () => {
-  const f = currentFair(), S0 = state.S0, gap = (S0 && isFinite(f.fv)) ? S0 - f.fv : null;
+  const f = currentFair(), s = state.settings, ut = unitText(), S0u = state.S0usd, gap = (S0u && isFinite(f.fv)) ? S0u - f.fv : null;
   $("fairResult").innerHTML =
     kpiCard(t("fv.fvLabel"), isFinite(f.fv) ? fmt(f.fv) : "—", "USD/oz", f.fv <= 0 ? t("fv.bad") : "", f.fv <= 0 ? "var(--bad)" : null) +
-    kpiCard(t("fv.market"), S0 ? fmt(S0) : "—", "USD/oz", gap === null ? "" : `${t("fv.gap")} ${gap >= 0 ? "+" : ""}${fmt(gap)} $ (${pct(gap / f.fv, 1)})`) +
+    kpiCard(t("fv.market"), S0u ? fmt(S0u) : "—", "USD/oz", gap === null ? "" : `${t("fv.gap")} ${gap >= 0 ? "+" : ""}${fmt(gap)} $ (${pct(gap / f.fv, 1)})`) +
     `<div class="card p-4"><div class="text-sm muted">${t("fv.ratioLbl")}</div><div class="mt-1 text-2xl font-bold num">${isFinite(f.ratio) ? f.ratio.toFixed(3) : "—"}</div><div class="mt-2"><span class="pill" style="color:${f.cls.color}">${f.cls.icon} ${f.cls.label}</span></div><div class="text-[11px] faint mt-2">${t("fv.legend")}</div></div>`;
-  const ref = currentRef(), g = t("u.g");
-  $("tblFairLocal").innerHTML = `<thead><tr><th>${t("lc.market")}</th><th>${t("fv.fair24")}</th><th>${t("fv.mkt24")}</th><th>${t("fv.gap")}</th></tr></thead><tbody>` + selMarkets().map(m => {
-    const fx = fxFor(m, ref); if (!fx || !(f.fv > 0) || !S0) return `<tr><td>${t("mk." + m)}</td><td colspan="3" class="faint">—</td></tr>`;
-    const a = localPrice(f.fv, fx, 24, premFor(m)), b = localPrice(S0, fx, 24, premFor(m));
-    return `<tr><td>${t("mk." + m)}</td><td><span class="num">${fmt(a)}</span> ${MARKETS[m].cur}/${g}</td><td><span class="num">${fmt(b)}</span> ${MARKETS[m].cur}/${g}</td><td><span class="num" style="color:${b > a ? "var(--bad)" : "var(--good)"}">${b >= a ? "+" : ""}${pct(b / a - 1, 1)}</span></td></tr>`; }).join("") + `</tbody>`;
+  $("tblFairLocal").innerHTML = `<thead><tr><th>${t("lc.market")}</th><th>${t("fv.fair24")} (${ut})</th><th>${t("fv.mkt24")} (${ut})</th><th>${t("fv.gap")}</th></tr></thead><tbody><tr><td>${t("mk." + s.market)} · ${s.karat}K</td>` +
+    (f.fvView && state.S0 ? `<td><span class="num">${fmt(f.fvView)}</span></td><td><span class="num">${fmt(state.S0)}</span></td><td><span class="num" style="color:${f.ratio > 1 ? "var(--bad)" : "var(--good)"}">${f.ratio >= 1 ? "+" : ""}${pct(f.ratio - 1, 1)}</span></td>` : `<td colspan="3" class="faint">—</td>`) + `</tr></tbody>`;
 };
-
 const renderDataTable = () => {
   const rows = loadData(); $("rowCount").textContent = `(${rows.length})`;
   if (!rows.length) { $("tblData").innerHTML = `<tr><td class="faint">${t("row.none")}</td></tr>`; $("btnShowAll").classList.add("hidden"); return; }
@@ -232,7 +245,7 @@ const renderDataTable = () => {
 const renderSettings = () => {
   const s = state.settings;
   $("sPremSA").value = s.premiumSA; $("sPremEG").value = s.premiumEG; $("sLambda").value = s.lambda; $("sNu").value = s.nu; $("sMult").value = s.sigmaMult; $("sN").value = s.nSims;
-  $("sVolModel").value = s.volModel; $("sRefresh").value = String(s.refreshMin); $("sAutoRow").checked = !!s.autoRow; $("sAutoHist").checked = !!s.autoHist;
+  $("sVolModel").value = s.volModel; $("sBasis").value = s.basis; $("sRefresh").value = String(s.refreshMin); $("sAutoRow").checked = !!s.autoRow; $("sAutoHist").checked = !!s.autoHist;
 };
 
 // ===================== الاختبارات الإحصائية =====================
@@ -305,7 +318,7 @@ const makeDemo = () => {
 const researchVisible = () => !$("tab-research").classList.contains("hidden");
 const refreshAll = (resim = true) => {
   if (resim) { runSimulation(); state.backtest = null; $("coverageResult").innerHTML = ""; $("christResult").innerHTML = ""; destroyChart("bt"); $("btChartWrap").classList.add("hidden"); }
-  renderBanners(); renderMarketChips(); renderDashboard(); renderForecast(); renderFair(); renderDataTable(); renderSettings(); renderLiveBadge();
+  renderBanners(); renderViewBar(); renderFxBar(); renderDashboard(); renderForecast(); renderFair(); renderDataTable(); renderSettings(); renderLiveBadge();
   if (researchVisible()) renderResearch();
 };
 const switchTab = (name) => {
@@ -315,13 +328,15 @@ const switchTab = (name) => {
 };
 const setLang = (l) => {
   state.lang = l; lsSet(LANG_KEY, l); document.documentElement.lang = l; document.documentElement.dir = l === "ar" ? "rtl" : "ltr";
-  applyStaticI18n(); chartDefaults(); renderFairInputs(); refreshAll(false); renderFetchLog(); renderHistSteps(); Object.keys(state.msgs).forEach(renderMsg); $("toast").classList.remove("show"); $("toast").textContent = ""; if (state.backtest) { doCoverage(); }
+  applyStaticI18n(); chartDefaults(); renderViewBar(true); renderFairInputs(); refreshAll(false); renderFetchLog(); renderHistSteps(); Object.keys(state.msgs).forEach(renderMsg); $("toast").classList.remove("show"); $("toast").textContent = ""; if (state.backtest) { doCoverage(); }
 };
 const setTheme = (dark) => { document.documentElement.classList.toggle("dark", dark); lsSet(THEME_KEY, dark ? "dark" : "light"); chartDefaults(); refreshAll(false); if (state.backtest) renderBacktestChart(state.backtest.pts); };
 
 const bind = () => {
   document.querySelectorAll(".tab-btn").forEach(b => b.addEventListener("click", () => switchTab(b.dataset.tab)));
   $("btnTheme").addEventListener("click", () => setTheme(!document.documentElement.classList.contains("dark")));
+  const onViewChange = () => { const st = state.settings; st.market = $("selMarket").value; st.unit = $("selUnit").value; st.karat = +$("selKarat").value; saveSettings(st); refreshAll(true); };
+  ["selMarket", "selUnit", "selKarat"].forEach(id => $(id).addEventListener("change", onViewChange));
   $("btnHelp").addEventListener("click", () => { state.helpOn = !state.helpOn; lsSet(HELP_KEY, state.helpOn ? "1" : "0"); applyHelp(); });
   document.addEventListener("toggle", (e) => { const d = e.target; if (d && d.matches && d.matches("details.help")) { state.helpState[d.dataset.k] = d.open; lsSet(HELPSTATE_KEY, JSON.stringify(state.helpState)); } }, true);
   $("btnUpdate").addEventListener("click", () => { location.replace(location.pathname + "?v=" + encodeURIComponent(state.newVersion || Date.now())); });
@@ -352,7 +367,7 @@ const bind = () => {
   $("btnSaveSettings").addEventListener("click", () => { const s = state.settings; const g = (id, def, ok) => { const v = num($(id).value); return (v !== null && ok(v)) ? v : def; };
     s.premiumSA = g("sPremSA", s.premiumSA, v => v >= 0); s.premiumEG = g("sPremEG", s.premiumEG, v => v >= 0); s.lambda = g("sLambda", s.lambda, v => v > 0.5 && v < 1); s.nu = g("sNu", s.nu, v => v > 2);
     s.sigmaMult = g("sMult", s.sigmaMult, v => v > 0.05 && v < 10); s.nSims = Math.round(g("sN", s.nSims, v => v >= 1000 && v <= 100000));
-    s.volModel = $("sVolModel").value; s.refreshMin = +$("sRefresh").value; s.autoRow = $("sAutoRow").checked; s.autoHist = $("sAutoHist").checked;
+    s.volModel = $("sVolModel").value; s.basis = $("sBasis").value; s.refreshMin = +$("sRefresh").value; s.autoRow = $("sAutoRow").checked; s.autoHist = $("sAutoHist").checked;
     saveSettings(s); scheduleNext(); refreshAll(true); toast(t("st.saved")); });
   $("btnResetModel").addEventListener("click", () => { if (!confirm(t("st.resetQ"))) return; state.settings = clone(DEFAULT_SETTINGS); saveSettings(state.settings); renderFairInputs(); scheduleNext(); refreshAll(true); toast(t("st.resetDone")); });
 };
@@ -362,7 +377,7 @@ const init = () => {
   state.lang = lsGet(LANG_KEY) === "en" ? "en" : "ar"; state.settings = loadSettings();
   const th = lsGet(THEME_KEY); document.documentElement.classList.toggle("dark", th ? th === "dark" : (window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches));
   document.documentElement.lang = state.lang; document.documentElement.dir = isRTL() ? "rtl" : "ltr";
-  applyStaticI18n(); chartDefaults(); if (!window.Chart) toast(t("toast.noChart"), 5000);
+  applyStaticI18n(); chartDefaults(); labelize(); if (!window.Chart) toast(t("toast.noChart"), 5000);
   $("fDate").value = todayISO(); bind(); renderFairInputs(); renderFetchLog(); refreshAll(true);
   const tab = lsGet("gold_tab"); if (tab && document.getElementById("tab-" + tab)) switchTab(tab);
   const live = loadLive(); if (live && live.fetchedAt) state.lastOk = new Date(live.fetchedAt).getTime();
