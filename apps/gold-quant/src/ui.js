@@ -124,12 +124,20 @@ const renderBanners = () => {
   const out = [], ref = currentRef(), n = ref.rows.length;
   if (state.sigmaInfo && state.sigmaInfo.isDefault) out.push(`<div class="banner banner-warn">⚠ ${t("b.noData")} <button class="btn mt-2 sm:mt-0 sm:ms-2" id="btnBannerHist">${t("b.dl")}</button></div>`);
   else if (n < 250) out.push(`<div class="banner banner-info">ℹ ${t("b.fewData", { n })} <button class="btn mt-2 sm:mt-0 sm:ms-2" id="btnBannerHist">${t("b.dl")}</button></div>`);
+  const bad = suspiciousRows(ref.rows), lsus = liveSuspect(ref.live, ref.rows), manualBad = lsus && ref.live && ref.live.source === "manual";
+  if (bad.length || manualBad) out.push(`<div class="banner banner-bad">⚠ ${bad.length ? t("b.suspect", { n: bad.length, d: bad[0].date, v: fmt(+bad[0].gold) }) : ""} ${manualBad ? t("b.liveManualSuspect", { v: fmt(ref.live.price), r: fmt(refUsdMedian(ref.rows)) }) : ""} <button class="btn btn-primary mt-2 sm:mt-0 sm:ms-2" id="btnFixData">${t("b.fix")}</button></div>`);
+  else if (lsus) out.push(`<div class="banner banner-warn">⚠ ${t("b.dataMismatch", { v: fmt(ref.live.price), r: fmt(refUsdMedian(ref.rows)) })}</div>`);
   if (state.liveErr) out.push(`<div class="banner banner-warn">⚠ ${escHtml(liveErrText())}</div>`);
   else if (ref.source === "data" && ref.last) out.push(`<div class="banner banner-info">ℹ ${t("b.lastKnown", { d: ref.last.date })}</div>`);
   if (ref.source === "none") out.push(`<div class="banner banner-info">ℹ ${t("b.noPrice")}</div>`);
   if (state.settings.market === "EG" && !ref.egp && ref.source !== "none") out.push(`<div class="banner banner-warn">⚠ ${t("b.noEgp")}</div>`);
   $("banners").innerHTML = out.join("");
   const b = $("btnBannerHist"); if (b) b.addEventListener("click", () => { switchTab("data"); downloadHistory($("histRange").value); });
+  const fx = $("btnFixData"); if (fx) fx.addEventListener("click", () => {
+    const badDates = new Set(bad.map(r => r.date)); saveData(loadData().filter(r => !badDates.has(r.date)));
+    if (manualBad) lsSet(LIVE_KEY, "null");
+    state.liveErr = null; retryCount = 0; refreshAll(true); toast(t("b.fixed")); fetchLiveNow();
+  });
 };
 // شريط العرض: الدولة/الوزن/العيار (القوائم لا تُعاد بناؤها إلا عند تغيير اللغة حفاظاً على تركيز لوحة المفاتيح)
 const renderViewBar = (rebuild = false) => {
@@ -345,8 +353,14 @@ const bind = () => {
   $("btnFetchHeader").addEventListener("click", doFetch); $("btnFetchNow").addEventListener("click", doFetch);
   document.querySelectorAll("#rangeBtns button").forEach(b => b.addEventListener("click", () => { state.settings.chartRange = +b.dataset.r; saveSettings(state.settings); renderHistoryChart(); }));
   $("btnHist").addEventListener("click", () => downloadHistory($("histRange").value));
-  $("btnManualLive").addEventListener("click", () => { const p = num($("qGold").value), a = num($("qSar").value), e = num($("qEgp").value); if (!(p > 300 && p < 50000) || !(a > 0) || !(e > 0)) { toast(t("man.invalid")); return; } applyManualLive(p, a, e); toast(t("man.applied")); });
-  $("btnManualFill").addEventListener("click", () => { const r = currentRef(); if (r.price) $("qGold").value = r.price.toFixed(2); if (r.sar) $("qSar").value = (+r.sar).toFixed(4); if (r.egp) $("qEgp").value = (+r.egp).toFixed(4); });
+  $("btnManualLive").addEventListener("click", () => { const p = num($("qGold").value), a = num($("qSar").value), e = num($("qEgp").value); if (!(p > 300 && p < 50000) || !(a > 0) || !(e > 0)) { toast(t("man.invalid")); return; }
+    const ref = currentRef(), live = ref.live, refUsd = (live && live.source !== "manual" && live.price > 0 && !liveSuspect(live, ref.rows)) ? live.price : refUsdMedian(ref.rows), refEgp = lastNonNull(ref.rows, "egp"), warn = [];
+    if (refUsd && Math.abs(Math.log(p / refUsd)) > SPIKE) warn.push(t("man.warnGold", { v: fmt(p), r: fmt(refUsd) }));
+    if (Math.abs(a - SAR_PEG) > 0.15) warn.push(t("man.warnSar", { v: a }));
+    if (refEgp && Math.abs(Math.log(e / refEgp)) > 0.25) warn.push(t("man.warnEgp", { v: e, r: fmt(refEgp, 4) }));
+    if (warn.length && !confirm(warn.join("\n\n") + "\n\n" + t("man.confirm"))) return;
+    applyManualLive(p, a, e); toast(t("man.applied")); });
+  $("btnManualFill").addEventListener("click", () => { const r = currentRef(); if (r.priceUsd) $("qGold").value = (+r.priceUsd).toFixed(2); if (r.sar) $("qSar").value = (+r.sar).toFixed(4); if (r.egp) $("qEgp").value = (+r.egp).toFixed(4); });
   $("inMu").addEventListener("change", () => { const v = num($("inMu").value); if (v === null || Math.abs(v) > 0.1) { toast(t("fc.muBad")); return; } state.settings.mu = v; saveSettings(state.settings); });
   $("btnSimulate").addEventListener("click", () => { const v = num($("inMu").value); if (v !== null && Math.abs(v) <= 0.1) { state.settings.mu = v; saveSettings(state.settings); } runSimulation(); renderBanners(); renderForecast(); renderDashboard(); toast(t("fc.simDone")); });
   $("inTarget").addEventListener("input", renderForecast);

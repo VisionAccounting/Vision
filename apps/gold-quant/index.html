@@ -476,7 +476,16 @@ ar: {
 "st.basis":"أساس التحليل",
 "st.basis.local":"عملة السوق (تتضمن حركة الصرف)",
 "st.basis.usd":"الدولار ثم تحويل بالصرف الحالي",
-"rs.viewNote":"التحليل بعملة {c} لكل {u} · عيار {k} · الأساس: {b}. العلاقات الكلية (الانحدار والارتباط) تُحسب بالدولار لأنها علاقات عالمية."
+"rs.viewNote":"التحليل بعملة {c} لكل {u} · عيار {k} · الأساس: {b}. العلاقات الكلية (الانحدار والارتباط) تُحسب بالدولار لأنها علاقات عالمية.",
+"man.warnGold":"السعر المدخل {v} دولار للأونصة يختلف كثيراً عن آخر سعر معروف ({r}). هل أدخلت سعر الجرام أو بعملة محلية؟ هذه الخانة بالدولار لكل أونصة.",
+"man.warnSar":"صرف الريال {v} بعيد عن الربط المعتاد 3.75.",
+"man.warnEgp":"صرف الجنيه {v} يختلف كثيراً عن آخر قيمة معروفة ({r}).",
+"man.confirm":"هل تريد التطبيق رغم ذلك؟",
+"b.suspect":"وُجدت {n} قيمة سعر غير منطقية في البيانات المخزنة (أولها {d}: {v} دولار للأونصة)، غالباً إدخال يدوي بوحدة خاطئة. هذه القيم تشوّه التحليلات والإشارة.",
+"b.liveManualSuspect":"السعر اليدوي الحالي {v} دولار للأونصة بعيد جداً عن بياناتك ({r}).",
+"b.fix":"حذف القيم الخاطئة وإعادة الجلب",
+"b.fixed":"تم حذف القيم الخاطئة، وجاري جلب السعر الحالي",
+"b.dataMismatch":"السعر الحي {v} دولار للأونصة يختلف كثيراً عن بياناتك المخزنة ({r}) — قد تكون بيانات تجريبية. امسحها من تبويب البيانات ثم حمّل البيانات التاريخية."
 },
 en: {
 "app.title":"GoldQuant — Gold Valuation & Daily Forecast","app.short":"Gold Valuation","app.sub":"Saudi Arabia · Egypt · Global — Last calibrated 2026-11-26",
@@ -577,7 +586,16 @@ en: {
 "st.basis":"Analysis basis",
 "st.basis.local":"Market currency (includes FX moves)",
 "st.basis.usd":"USD, converted at the current rate",
-"rs.viewNote":"Analysis in {c} per {u} · {k}K · basis: {b}. Macro relations (regression and correlation) use USD because they are global relationships."
+"rs.viewNote":"Analysis in {c} per {u} · {k}K · basis: {b}. Macro relations (regression and correlation) use USD because they are global relationships.",
+"man.warnGold":"The price you entered, {v} USD per ounce, is far from the last known price ({r}). Did you enter a per-gram or local-currency price? This field is USD per ounce.",
+"man.warnSar":"The SAR rate {v} is far from the usual 3.75 peg.",
+"man.warnEgp":"The EGP rate {v} is far from the last known value ({r}).",
+"man.confirm":"Apply anyway?",
+"b.suspect":"Found {n} implausible price value(s) in stored data (first {d}: {v} USD per ounce), most likely a manual entry in the wrong unit. These values distort the analyses and the signal.",
+"b.liveManualSuspect":"The current manual price, {v} USD per ounce, is very far from your data ({r}).",
+"b.fix":"Remove wrong values and refetch",
+"b.fixed":"Wrong values removed; fetching the current price",
+"b.dataMismatch":"The live price, {v} USD per ounce, is far from your stored data ({r}) — it may be demo data. Clear it in the Data tab, then download historical data."
 }
 };
 
@@ -725,7 +743,7 @@ const rollingCorr = (a, b, w) => { const out = []; for (let i = w; i <= a.length
 const histVaR = (r, q) => { const v = quantileOf(r, q); const tail = r.filter(x => x <= v); return { var: -v, cvar: -mean(tail) }; };
 
 // ===================== الثوابت =====================
-const APP_VERSION = "2.1.0-6fa61691"; // يُستبدل عند البناء (build.py)
+const APP_VERSION = "2.1.0-908bebc9"; // يُستبدل عند البناء (build.py)
 const OUNCE_TO_GRAM = 31.1035;
 const STORAGE_KEY = "gold_model_data", SETTINGS_KEY = "gold_model_settings", LIVE_KEY = "gold_last_live", THEME_KEY = "gold_theme", LANG_KEY = "gold_lang", HISTTRY_KEY = "gold_hist_try", HELP_KEY = "gold_help", HELPSTATE_KEY = "gold_help_state";
 const DEFAULT_SIGMA = 0.012, BASE_MU = 0.0002, SAR_PEG = 3.75;
@@ -998,9 +1016,30 @@ const tick = () => {
   if (state.nextAt && Date.now() >= state.nextAt && !document.hidden && !state.fetching) fetchLiveNow();
 };
 
+// ---- سلامة البيانات ----
+// قفزة يومية أكبر من 20% في سعر الذهب لم تحدث تاريخياً؛ إن لم تستمر في اليوم التالي فهي قراءة/إدخال خاطئ
+const SPIKE = 0.2;
+const suspiciousRows = (rows) => {
+  const out = [];
+  for (let i = 1; i < rows.length; i++) {
+    const a = +rows[i - 1].gold, b = +rows[i].gold; if (!(a > 0 && b > 0) || Math.abs(Math.log(b / a)) <= SPIKE) continue;
+    const c = i + 1 < rows.length ? +rows[i + 1].gold : null;
+    if (c === null || !(c > 0) || Math.abs(Math.log(c / a)) < 0.05) out.push(rows[i]);
+  }
+  return out;
+};
+// سعر مرجعي متين بالدولار: وسيط آخر 5 أيام قبل اليوم بعد استبعاد القيم الشاذة
+const refUsdMedian = (rows) => {
+  const bad = new Set(suspiciousRows(rows).map(r => r.date)), d = todayISO();
+  const xs = rows.filter(r => r.date < d && !bad.has(r.date) && +r.gold > 0).slice(-5).map(r => +r.gold).sort((a, b) => a - b);
+  return xs.length ? xs[Math.floor(xs.length / 2)] : null;
+};
+const liveSuspect = (live, rows) => { const r = refUsdMedian(rows); return !!(live && live.price > 0 && r && Math.abs(Math.log(live.price / r)) > SPIKE); };
+
 // حفظ سعر اليوم الحي كصف (أيام العمل فقط) ليبقى النموذج محدّثاً
 const upsertToday = (live) => {
   const d = todayISO(), dow = new Date().getUTCDay(); if (dow === 0 || dow === 6 || !live || !(live.price > 0)) return;
+  if (liveSuspect(live, loadData())) return; // لا نلوّث السجل بقيمة بعيدة جداً عن الأيام السابقة
   const rows = loadData().slice(), i = rows.findIndex(r => r.date === d), prev = rows[rows.length - 1] || {};
   const base = { date: d, gold: +live.price.toFixed(2), sar: live.sar || prev.sar || SAR_PEG, egp: live.egp || prev.egp || null };
   if (i >= 0) rows[i] = { ...rows[i], gold: base.gold, sar: base.sar, egp: base.egp };
@@ -1232,12 +1271,20 @@ const renderBanners = () => {
   const out = [], ref = currentRef(), n = ref.rows.length;
   if (state.sigmaInfo && state.sigmaInfo.isDefault) out.push(`<div class="banner banner-warn">⚠ ${t("b.noData")} <button class="btn mt-2 sm:mt-0 sm:ms-2" id="btnBannerHist">${t("b.dl")}</button></div>`);
   else if (n < 250) out.push(`<div class="banner banner-info">ℹ ${t("b.fewData", { n })} <button class="btn mt-2 sm:mt-0 sm:ms-2" id="btnBannerHist">${t("b.dl")}</button></div>`);
+  const bad = suspiciousRows(ref.rows), lsus = liveSuspect(ref.live, ref.rows), manualBad = lsus && ref.live && ref.live.source === "manual";
+  if (bad.length || manualBad) out.push(`<div class="banner banner-bad">⚠ ${bad.length ? t("b.suspect", { n: bad.length, d: bad[0].date, v: fmt(+bad[0].gold) }) : ""} ${manualBad ? t("b.liveManualSuspect", { v: fmt(ref.live.price), r: fmt(refUsdMedian(ref.rows)) }) : ""} <button class="btn btn-primary mt-2 sm:mt-0 sm:ms-2" id="btnFixData">${t("b.fix")}</button></div>`);
+  else if (lsus) out.push(`<div class="banner banner-warn">⚠ ${t("b.dataMismatch", { v: fmt(ref.live.price), r: fmt(refUsdMedian(ref.rows)) })}</div>`);
   if (state.liveErr) out.push(`<div class="banner banner-warn">⚠ ${escHtml(liveErrText())}</div>`);
   else if (ref.source === "data" && ref.last) out.push(`<div class="banner banner-info">ℹ ${t("b.lastKnown", { d: ref.last.date })}</div>`);
   if (ref.source === "none") out.push(`<div class="banner banner-info">ℹ ${t("b.noPrice")}</div>`);
   if (state.settings.market === "EG" && !ref.egp && ref.source !== "none") out.push(`<div class="banner banner-warn">⚠ ${t("b.noEgp")}</div>`);
   $("banners").innerHTML = out.join("");
   const b = $("btnBannerHist"); if (b) b.addEventListener("click", () => { switchTab("data"); downloadHistory($("histRange").value); });
+  const fx = $("btnFixData"); if (fx) fx.addEventListener("click", () => {
+    const badDates = new Set(bad.map(r => r.date)); saveData(loadData().filter(r => !badDates.has(r.date)));
+    if (manualBad) lsSet(LIVE_KEY, "null");
+    state.liveErr = null; retryCount = 0; refreshAll(true); toast(t("b.fixed")); fetchLiveNow();
+  });
 };
 // شريط العرض: الدولة/الوزن/العيار (القوائم لا تُعاد بناؤها إلا عند تغيير اللغة حفاظاً على تركيز لوحة المفاتيح)
 const renderViewBar = (rebuild = false) => {
@@ -1453,8 +1500,14 @@ const bind = () => {
   $("btnFetchHeader").addEventListener("click", doFetch); $("btnFetchNow").addEventListener("click", doFetch);
   document.querySelectorAll("#rangeBtns button").forEach(b => b.addEventListener("click", () => { state.settings.chartRange = +b.dataset.r; saveSettings(state.settings); renderHistoryChart(); }));
   $("btnHist").addEventListener("click", () => downloadHistory($("histRange").value));
-  $("btnManualLive").addEventListener("click", () => { const p = num($("qGold").value), a = num($("qSar").value), e = num($("qEgp").value); if (!(p > 300 && p < 50000) || !(a > 0) || !(e > 0)) { toast(t("man.invalid")); return; } applyManualLive(p, a, e); toast(t("man.applied")); });
-  $("btnManualFill").addEventListener("click", () => { const r = currentRef(); if (r.price) $("qGold").value = r.price.toFixed(2); if (r.sar) $("qSar").value = (+r.sar).toFixed(4); if (r.egp) $("qEgp").value = (+r.egp).toFixed(4); });
+  $("btnManualLive").addEventListener("click", () => { const p = num($("qGold").value), a = num($("qSar").value), e = num($("qEgp").value); if (!(p > 300 && p < 50000) || !(a > 0) || !(e > 0)) { toast(t("man.invalid")); return; }
+    const ref = currentRef(), live = ref.live, refUsd = (live && live.source !== "manual" && live.price > 0 && !liveSuspect(live, ref.rows)) ? live.price : refUsdMedian(ref.rows), refEgp = lastNonNull(ref.rows, "egp"), warn = [];
+    if (refUsd && Math.abs(Math.log(p / refUsd)) > SPIKE) warn.push(t("man.warnGold", { v: fmt(p), r: fmt(refUsd) }));
+    if (Math.abs(a - SAR_PEG) > 0.15) warn.push(t("man.warnSar", { v: a }));
+    if (refEgp && Math.abs(Math.log(e / refEgp)) > 0.25) warn.push(t("man.warnEgp", { v: e, r: fmt(refEgp, 4) }));
+    if (warn.length && !confirm(warn.join("\n\n") + "\n\n" + t("man.confirm"))) return;
+    applyManualLive(p, a, e); toast(t("man.applied")); });
+  $("btnManualFill").addEventListener("click", () => { const r = currentRef(); if (r.priceUsd) $("qGold").value = (+r.priceUsd).toFixed(2); if (r.sar) $("qSar").value = (+r.sar).toFixed(4); if (r.egp) $("qEgp").value = (+r.egp).toFixed(4); });
   $("inMu").addEventListener("change", () => { const v = num($("inMu").value); if (v === null || Math.abs(v) > 0.1) { toast(t("fc.muBad")); return; } state.settings.mu = v; saveSettings(state.settings); });
   $("btnSimulate").addEventListener("click", () => { const v = num($("inMu").value); if (v !== null && Math.abs(v) <= 0.1) { state.settings.mu = v; saveSettings(state.settings); } runSimulation(); renderBanners(); renderForecast(); renderDashboard(); toast(t("fc.simDone")); });
   $("inTarget").addEventListener("input", renderForecast);

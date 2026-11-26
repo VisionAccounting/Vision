@@ -93,4 +93,18 @@ ok('fairness boundaries', cls(1.15) === 'fair' && cls(1.1500001) === 'over' && c
   const r3 = viewRows(fxRows, S({ market: 'EG', premiumEG: 5 })); ok('memo invalidated by premium change', r3 !== r1 && r3[0].gold > r1[0].gold);
   const copy = fxRows.map(r => ({ ...r })); copy[1].egp = 35; const r4 = viewRows(copy, S({ market: 'EG' }));
   ok('memo invalidated when a middle row changes', r4 !== r3 && Math.abs(r4[1].fx - 35) < 1e-12); }
+// ---- 11) سلامة البيانات: كشف القيم الشاذة (مثل إدخال سعر الجرام مكان الأونصة) ----
+{ const d = (n) => '2026-01-' + String(n).padStart(2, '0');
+  const base = [6100, 6120, 6090, 6130, 6150].map((g, i) => ({ date: d(i + 1), gold: g }));
+  ok('clean data -> no suspicious rows', suspiciousRows(base).length === 0);
+  const lastBad = [...base, { date: d(6), gold: 740.95 }];
+  ok('last row 740.95 after 6150 flagged', suspiciousRows(lastBad).map(r => r.date).join() === d(6));
+  const midBad = [...base.slice(0, 3), { date: d(4), gold: 740.95 }, ...base.slice(3).map((r, i) => ({ ...r, date: d(5 + i) }))];
+  ok('middle spike flagged (reverts next day)', suspiciousRows(midBad).map(r => r.date).join() === d(4));
+  const realMove = [...base, { date: d(6), gold: 6150 * 1.06 }];
+  ok('a real 6% move is NOT flagged', suspiciousRows(realMove).length === 0);
+  const regime = [{ date: d(1), gold: 1000 }, { date: d(2), gold: 1300 }, { date: d(3), gold: 1310 }];
+  ok('persistent level change (not reverting) is not flagged as spike', suspiciousRows(regime).length === 0);
+  ok('robust reference median ignores the bad row', refUsdMedian(midBad) === 6120, String(refUsdMedian(midBad)));
+  ok('liveSuspect: manual 740.95 vs ~6100 history', liveSuspect({ price: 740.95 }, base) === true && liveSuspect({ price: 6200 }, base) === false); }
 console.log(fail ? `\n${fail} FAILED` : '\nall calc tests passed'); process.exit(fail ? 1 : 0);

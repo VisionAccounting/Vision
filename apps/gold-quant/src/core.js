@@ -272,9 +272,30 @@ const tick = () => {
   if (state.nextAt && Date.now() >= state.nextAt && !document.hidden && !state.fetching) fetchLiveNow();
 };
 
+// ---- سلامة البيانات ----
+// قفزة يومية أكبر من 20% في سعر الذهب لم تحدث تاريخياً؛ إن لم تستمر في اليوم التالي فهي قراءة/إدخال خاطئ
+const SPIKE = 0.2;
+const suspiciousRows = (rows) => {
+  const out = [];
+  for (let i = 1; i < rows.length; i++) {
+    const a = +rows[i - 1].gold, b = +rows[i].gold; if (!(a > 0 && b > 0) || Math.abs(Math.log(b / a)) <= SPIKE) continue;
+    const c = i + 1 < rows.length ? +rows[i + 1].gold : null;
+    if (c === null || !(c > 0) || Math.abs(Math.log(c / a)) < 0.05) out.push(rows[i]);
+  }
+  return out;
+};
+// سعر مرجعي متين بالدولار: وسيط آخر 5 أيام قبل اليوم بعد استبعاد القيم الشاذة
+const refUsdMedian = (rows) => {
+  const bad = new Set(suspiciousRows(rows).map(r => r.date)), d = todayISO();
+  const xs = rows.filter(r => r.date < d && !bad.has(r.date) && +r.gold > 0).slice(-5).map(r => +r.gold).sort((a, b) => a - b);
+  return xs.length ? xs[Math.floor(xs.length / 2)] : null;
+};
+const liveSuspect = (live, rows) => { const r = refUsdMedian(rows); return !!(live && live.price > 0 && r && Math.abs(Math.log(live.price / r)) > SPIKE); };
+
 // حفظ سعر اليوم الحي كصف (أيام العمل فقط) ليبقى النموذج محدّثاً
 const upsertToday = (live) => {
   const d = todayISO(), dow = new Date().getUTCDay(); if (dow === 0 || dow === 6 || !live || !(live.price > 0)) return;
+  if (liveSuspect(live, loadData())) return; // لا نلوّث السجل بقيمة بعيدة جداً عن الأيام السابقة
   const rows = loadData().slice(), i = rows.findIndex(r => r.date === d), prev = rows[rows.length - 1] || {};
   const base = { date: d, gold: +live.price.toFixed(2), sar: live.sar || prev.sar || SAR_PEG, egp: live.egp || prev.egp || null };
   if (i >= 0) rows[i] = { ...rows[i], gold: base.gold, sar: base.sar, egp: base.egp };

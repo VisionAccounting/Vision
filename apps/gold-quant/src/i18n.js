@@ -99,7 +99,16 @@ ar: {
 "st.basis":"أساس التحليل",
 "st.basis.local":"عملة السوق (تتضمن حركة الصرف)",
 "st.basis.usd":"الدولار ثم تحويل بالصرف الحالي",
-"rs.viewNote":"التحليل بعملة {c} لكل {u} · عيار {k} · الأساس: {b}. العلاقات الكلية (الانحدار والارتباط) تُحسب بالدولار لأنها علاقات عالمية."
+"rs.viewNote":"التحليل بعملة {c} لكل {u} · عيار {k} · الأساس: {b}. العلاقات الكلية (الانحدار والارتباط) تُحسب بالدولار لأنها علاقات عالمية.",
+"man.warnGold":"السعر المدخل {v} دولار للأونصة يختلف كثيراً عن آخر سعر معروف ({r}). هل أدخلت سعر الجرام أو بعملة محلية؟ هذه الخانة بالدولار لكل أونصة.",
+"man.warnSar":"صرف الريال {v} بعيد عن الربط المعتاد 3.75.",
+"man.warnEgp":"صرف الجنيه {v} يختلف كثيراً عن آخر قيمة معروفة ({r}).",
+"man.confirm":"هل تريد التطبيق رغم ذلك؟",
+"b.suspect":"وُجدت {n} قيمة سعر غير منطقية في البيانات المخزنة (أولها {d}: {v} دولار للأونصة)، غالباً إدخال يدوي بوحدة خاطئة. هذه القيم تشوّه التحليلات والإشارة.",
+"b.liveManualSuspect":"السعر اليدوي الحالي {v} دولار للأونصة بعيد جداً عن بياناتك ({r}).",
+"b.fix":"حذف القيم الخاطئة وإعادة الجلب",
+"b.fixed":"تم حذف القيم الخاطئة، وجاري جلب السعر الحالي",
+"b.dataMismatch":"السعر الحي {v} دولار للأونصة يختلف كثيراً عن بياناتك المخزنة ({r}) — قد تكون بيانات تجريبية. امسحها من تبويب البيانات ثم حمّل البيانات التاريخية."
 },
 en: {
 "app.title":"GoldQuant — Gold Valuation & Daily Forecast","app.short":"Gold Valuation","app.sub":"Saudi Arabia · Egypt · Global — Last calibrated 2026-11-26",
@@ -200,6 +209,15 @@ en: {
 "st.basis":"Analysis basis",
 "st.basis.local":"Market currency (includes FX moves)",
 "st.basis.usd":"USD, converted at the current rate",
-"rs.viewNote":"Analysis in {c} per {u} · {k}K · basis: {b}. Macro relations (regression and correlation) use USD because they are global relationships."
+"rs.viewNote":"Analysis in {c} per {u} · {k}K · basis: {b}. Macro relations (regression and correlation) use USD because they are global relationships.",
+"man.warnGold":"The price you entered, {v} USD per ounce, is far from the last known price ({r}). Did you enter a per-gram or local-currency price? This field is USD per ounce.",
+"man.warnSar":"The SAR rate {v} is far from the usual 3.75 peg.",
+"man.warnEgp":"The EGP rate {v} is far from the last known value ({r}).",
+"man.confirm":"Apply anyway?",
+"b.suspect":"Found {n} implausible price value(s) in stored data (first {d}: {v} USD per ounce), most likely a manual entry in the wrong unit. These values distort the analyses and the signal.",
+"b.liveManualSuspect":"The current manual price, {v} USD per ounce, is very far from your data ({r}).",
+"b.fix":"Remove wrong values and refetch",
+"b.fixed":"Wrong values removed; fetching the current price",
+"b.dataMismatch":"The live price, {v} USD per ounce, is far from your stored data ({r}) — it may be demo data. Clear it in the Data tab, then download historical data."
 }
 };
