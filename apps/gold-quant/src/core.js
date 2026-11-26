@@ -142,6 +142,8 @@ const premFor = (mk, s = state.settings) => { const p = MARKETS[mk].prem; return
 const premPerUnit = (mk, unit, s = state.settings) => premFor(mk, s) * (unit === "oz" ? OUNCE_TO_GRAM : 1);
 // سعر العرض = سعر الأونصة بالدولار × الصرف × (العيار/24) × عامل الوحدة + المصنعية (بعد تحويلها للوحدة)
 const toView = (usdOz, fx, v = state.settings) => usdOz * fx * (v.karat / 24) * unitFactor(v.unit) + premPerUnit(v.market, v.unit, v);
+// العكس: من سعر العرض (عملة × وحدة × عيار + مصنعية) إلى دولار/أونصة
+const fromView = (v, fx, s = state.settings) => (v - premPerUnit(s.market, s.unit, s)) / (fx * (s.karat / 24) * unitFactor(s.unit));
 const viewSig = (v = state.settings) => [v.market, v.unit, v.karat, v.basis, v.premiumSA, v.premiumEG].join("|");
 // سلسلة الصرف لكل صف: ملء للأمام ثم للخلف؛ الريال مربوط 3.75 عند غياب القيمة؛ العالمي = 1
 const fxSeries = (rows, mk) => {

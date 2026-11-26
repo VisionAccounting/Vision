@@ -165,6 +165,25 @@ const renderFxBar = () => {
   if (dxy) items.push(fxItem("DXY", fmt(dxy, 2), ch(dxy, prevRow && +prevRow.dxy)));
   $("fxBar").innerHTML = `<div class="row max-w-7xl mx-auto px-4">${items.join("")}</div>`;
 };
+// لوحة التحديث اليدوي: تتبع العرض الحالي وتتحدّث تلقائياً ما لم يكن المستخدم يكتب فيها
+const manualValues = () => {
+  const s = state.settings, sh = state.manualShown || {}, gs = $("qGold").value, fs = $("qFx").value;
+  return { pv: (gs !== "" && gs === sh.g) ? sh.gv : num(gs), fx: s.market === "GL" ? 1 : ((fs !== "" && fs === sh.fx) ? sh.fxv : num(fs)) };
+};
+const renderManualPreview = () => {
+  const s = state.settings, { pv, fx } = manualValues();
+  $("qPreview").textContent = (pv > 0 && fx > 0) ? t("man.preview", { usd: fmt(fromView(pv, fx, s)), v: fmt(pv), u: unitText() }) : "";
+};
+const renderManual = (force = false) => {
+  const s = state.settings, ref = currentRef();
+  $("qGoldLbl").textContent = t("man.priceLbl", { u: unitText(), k: s.karat });
+  $("qFxLbl").textContent = `USD/${MARKETS[s.market].cur}`; $("qFxWrap").classList.toggle("hidden", s.market === "GL");
+  if (force || !state.manualDirty) {
+    $("qGold").value = ref.price ? (+ref.price).toFixed(2) : ""; $("qFx").value = (s.market !== "GL" && ref.fxNow) ? (+ref.fxNow).toFixed(4) : "";
+    state.manualShown = { g: $("qGold").value, gv: ref.price, fx: $("qFx").value, fxv: ref.fxNow };
+  }
+  renderManualPreview();
+};
 // ربط كل تسمية (label) بحقلها لقارئات الشاشة
 const labelize = () => document.querySelectorAll("label.lbl").forEach(l => { if (l.htmlFor) return; const c = l.parentElement && l.parentElement.querySelector("input,select,textarea"); if (c) { if (!c.id) c.id = "f_" + Math.random().toString(36).slice(2, 8); l.htmlFor = c.id; } });
 
@@ -211,7 +230,7 @@ const renderForecast = () => {
   const rowsP = [["P5", mc.p5, "fc.d5"], ["P10", mc.p10, "fc.d10"], ["P50", mc.p50, "fc.d50"], ["P90", mc.p90, "fc.d90"], ["P95", mc.p95, "fc.d95"]];
   $("tblGlobalBands").innerHTML = `<thead><tr><th>${t("fc.pct")}</th><th>${ut}</th><th>${t("fc.chg")}</th><th>${t("fc.mean")}</th></tr></thead><tbody>` + rowsP.map(([k, v, d]) => `<tr><td class="font-semibold">${k}</td><td><span class="num">${fmt(v)}</span></td><td><span class="num" style="color:${v >= S0 ? "var(--good)" : "var(--bad)"}">${v >= S0 ? "+" : ""}${pct(v / S0 - 1, 2)}</span></td><td class="muted">${t(d)}</td></tr>`).join("") + `</tbody>`;
   const N = mc.all.length, above90 = mc.all.filter(x => x > mc.p90).length / N, below10 = mc.all.filter(x => x < mc.p10).length / N, up = mc.all.filter(x => x > S0).length / N;
-  const target = num($("inTarget").value), pT = target ? mc.all.filter(x => x > target).length / N : null, hist = state.backtest;
+  const target = state.targetView > 0 ? state.targetView : null, pT = target ? mc.all.filter(x => x > target).length / N : null, hist = state.backtest;
   const stat = (k, v, sub) => `<div class="stat"><div class="k">${k}</div><div class="v num">${v}</div><div class="s">${sub || ""}</div></div>`;
   $("probStats").innerHTML = stat(t("pr.above90"), pct(above90), hist ? t("pr.histRate", { v: pct(hist.aboveRate) }) : t("pr.runCov")) + stat(t("pr.below10"), pct(below10), hist ? t("pr.histRate", { v: pct(hist.belowRate) }) : t("pr.approx10")) +
     stat(t("pr.up"), pct(up), `${t("pr.cur")} ${fmt(S0)}`) + stat(t("pr.target"), pT === null ? "—" : pct(pT), target ? `${t("pr.tg")} ${fmt(target)}` : t("pr.enterTarget"));
@@ -330,7 +349,7 @@ const makeDemo = () => {
 const researchVisible = () => !$("tab-research").classList.contains("hidden");
 const refreshAll = (resim = true) => {
   if (resim) { runSimulation(); state.backtest = null; $("coverageResult").innerHTML = ""; $("christResult").innerHTML = ""; destroyChart("bt"); $("btChartWrap").classList.add("hidden"); }
-  renderBanners(); renderViewBar(); renderFxBar(); renderDashboard(); renderForecast(); renderFair(); renderDataTable(); renderSettings(); renderLiveBadge();
+  renderBanners(); renderViewBar(); renderFxBar(); renderManual(); renderDashboard(); renderForecast(); renderFair(); renderDataTable(); renderSettings(); renderLiveBadge();
   if (researchVisible()) renderResearch();
 };
 const switchTab = (name) => {
@@ -347,7 +366,13 @@ const setTheme = (dark) => { document.documentElement.classList.toggle("dark", d
 const bind = () => {
   document.querySelectorAll(".tab-btn").forEach(b => b.addEventListener("click", () => switchTab(b.dataset.tab)));
   $("btnTheme").addEventListener("click", () => setTheme(!document.documentElement.classList.contains("dark")));
-  const onViewChange = () => { const st = state.settings; st.market = $("selMarket").value; st.unit = $("selUnit").value; st.karat = +$("selKarat").value; saveSettings(st); refreshAll(true); };
+  const onViewChange = () => {
+    const st = state.settings, old = { ...st }, oldFx = currentRef().fxNow, tg = state.targetView;
+    st.market = $("selMarket").value; st.unit = $("selUnit").value; st.karat = +$("selKarat").value; saveSettings(st);
+    state.manualDirty = false;
+    if (tg > 0 && oldFx > 0) { const nfx = currentRef().fxNow; state.targetView = nfx > 0 ? toView(fromView(tg, oldFx, old), nfx, st) : null; $("inTarget").value = state.targetView ? state.targetView.toFixed(2) : ""; }
+    refreshAll(true);
+  };
   ["selMarket", "selUnit", "selKarat"].forEach(id => $(id).addEventListener("change", onViewChange));
   $("btnHelp").addEventListener("click", () => { state.helpOn = !state.helpOn; lsSet(HELP_KEY, state.helpOn ? "1" : "0"); applyHelp(); });
   document.addEventListener("toggle", (e) => { const d = e.target; if (d && d.matches && d.matches("details.help")) { state.helpState[d.dataset.k] = d.open; lsSet(HELPSTATE_KEY, JSON.stringify(state.helpState)); } }, true);
@@ -357,17 +382,25 @@ const bind = () => {
   $("btnFetchHeader").addEventListener("click", doFetch); $("btnFetchNow").addEventListener("click", doFetch);
   document.querySelectorAll("#rangeBtns button").forEach(b => b.addEventListener("click", () => { state.settings.chartRange = +b.dataset.r; saveSettings(state.settings); renderHistoryChart(); }));
   $("btnHist").addEventListener("click", () => downloadHistory($("histRange").value));
-  $("btnManualLive").addEventListener("click", () => { const p = num($("qGold").value), a = num($("qSar").value), e = num($("qEgp").value); if (!(p > 300 && p < 50000) || !(a > 0) || !(e > 0)) { toast(t("man.invalid")); return; }
-    const ref = currentRef(), live = ref.live, refUsd = (live && live.source !== "manual" && live.price > 0 && !liveSuspect(live, ref.rows)) ? live.price : refUsdMedian(ref.rows), refEgp = lastNonNull(ref.rows, "egp"), warn = [];
-    if (refUsd && Math.abs(Math.log(p / refUsd)) > SPIKE) warn.push(t("man.warnGold", { v: fmt(p), r: fmt(refUsd) }));
-    if (Math.abs(a - SAR_PEG) > 0.15) warn.push(t("man.warnSar", { v: a }));
-    if (refEgp && Math.abs(Math.log(e / refEgp)) > 0.25) warn.push(t("man.warnEgp", { v: e, r: fmt(refEgp, 4) }));
+  // التحديث اليدوي بعملة ووحدة وعيار العرض، ثم التحويل إلى دولار/أونصة
+  $("btnManualLive").addEventListener("click", () => {
+    const s = state.settings, ref = currentRef(), { pv, fx } = manualValues();
+    if (!(pv > 0) || !(fx > 0)) { toast(t("man.invalid")); return; }
+    const p = fromView(pv, fx, s);
+    if (!(p > 300 && p < 50000)) { toast(t("man.invalid")); return; }
+    const sar = s.market === "SA" ? fx : ref.sar, egp = s.market === "EG" ? fx : ref.egp;
+    const live = ref.live, refUsd = (live && live.source !== "manual" && live.price > 0 && !liveSuspect(live, ref.rows)) ? live.price : refUsdMedian(ref.rows), refEgp = lastNonNull(ref.rows, "egp"), warn = [];
+    if (refUsd && Math.abs(Math.log(p / refUsd)) > SPIKE) warn.push(t("man.warnGold", { v: `${fmt(pv)} ${unitText()}`, usd: fmt(p), r: fmt(refUsd) }));
+    if (s.market === "SA" && Math.abs(fx - SAR_PEG) > 0.15) warn.push(t("man.warnSar", { v: fx }));
+    if (s.market === "EG" && refEgp && Math.abs(Math.log(fx / refEgp)) > 0.25) warn.push(t("man.warnEgp", { v: fx, r: fmt(refEgp, 4) }));
     if (warn.length && !confirm(warn.join("\n\n") + "\n\n" + t("man.confirm"))) return;
-    applyManualLive(p, a, e); toast(t("man.applied")); });
-  $("btnManualFill").addEventListener("click", () => { const r = currentRef(); if (r.priceUsd) $("qGold").value = (+r.priceUsd).toFixed(2); if (r.sar) $("qSar").value = (+r.sar).toFixed(4); if (r.egp) $("qEgp").value = (+r.egp).toFixed(4); });
+    state.manualDirty = false; applyManualLive(p, sar, egp); toast(t("man.applied"));
+  });
+  $("btnManualFill").addEventListener("click", () => { state.manualDirty = false; renderManual(true); });
+  ["qGold", "qFx"].forEach(id => $(id).addEventListener("input", () => { state.manualDirty = true; renderManualPreview(); }));
   $("inMu").addEventListener("change", () => { const v = num($("inMu").value); if (v === null || Math.abs(v) > 0.1) { toast(t("fc.muBad")); return; } state.settings.mu = v; saveSettings(state.settings); });
   $("btnSimulate").addEventListener("click", () => { const v = num($("inMu").value); if (v !== null && Math.abs(v) <= 0.1) { state.settings.mu = v; saveSettings(state.settings); } runSimulation(); renderBanners(); renderForecast(); renderDashboard(); toast(t("fc.simDone")); });
-  $("inTarget").addEventListener("input", renderForecast);
+  $("inTarget").addEventListener("input", () => { const v = num($("inTarget").value); state.targetView = v > 0 ? v : null; renderForecast(); });
   $("btnCoverage").addEventListener("click", doCoverage); $("btnChristoffersen").addEventListener("click", doChristoffersen);
   $("rowForm").addEventListener("submit", (e) => { e.preventDefault(); const last = loadData().slice(-1)[0] || {};
     const row = { src: "manual", date: $("fDate").value, gold: num($("fGold").value), sar: num($("fSar").value) || last.sar || SAR_PEG, egp: num($("fEgp").value) || last.egp || null, realYield: num($("fRy").value), dxy: num($("fDxy").value), vix: num($("fVix").value) };

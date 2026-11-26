@@ -117,4 +117,9 @@ ok('fairness boundaries', cls(1.15) === 'fair' && cls(1.1500001) === 'over' && c
   ok('no sources -> null', consensus([], 'price', 0.015) === null);
   const fx = consensus([{ source: 'frankfurter', egp: 54.2126 }, { source: 'open.er-api.com', egp: 54.10 }, { source: 'currency-api (jsDelivr)', egp: 48.0 }], 'egp', 0.02);
   ok('FX consensus excludes stale EGP', near(fx.value, (54.2126 + 54.10) / 2, 1e-12) && fx.others.length === 1, String(fx.value)); }
+// ---- 13) التحويل العكسي: fromView(toView(x)) = x لكل تركيبة (مع مصنعية) ----
+{ let maxErr = 0; for (const mk of ['SA', 'EG', 'GL']) for (const unit of ['g', 'oz']) for (const k of [24, 22, 21, 18]) {
+    const s = S({ market: mk, unit, karat: k, premiumSA: 12.5, premiumEG: 150 }), fx = mk === 'EG' ? 54.2126 : mk === 'SA' ? 3.75 : 1;
+    maxErr = Math.max(maxErr, Math.abs(fromView(toView(6144.16, fx, s), fx, s) / 6144.16 - 1)); }
+  ok('fromView is the exact inverse of toView (all 48 combos, with premium)', maxErr < 1e-12, maxErr.toExponential(2)); }
 console.log(fail ? `\n${fail} FAILED` : '\nall calc tests passed'); process.exit(fail ? 1 : 0);

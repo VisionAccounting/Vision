@@ -28,7 +28,7 @@ ar: {
 "fv.fvLabel":"القيمة العادلة للنموذج","fv.market":"السعر السوقي","fv.gap":"الفجوة","fv.bad":"قيمة غير منطقية — راجع المعاملات","fv.ratioLbl":"نسبة العدالة (السوق ÷ العادلة)","fv.legend":"مبالغ فيه > 1.15 · عادل 0.85–1.15 · أقل من قيمته < 0.85","fv.local":"القيمة العادلة بعملة العرض","fv.fair24":"العادل","fv.mkt24":"السوقي",
 "hist.title":"تحميل البيانات التاريخية","hist.desc":"يحمّل الذهب والريال والجنيه ومؤشر الدولار وVIX والعائد الحقيقي يومياً من عدة مصادر مع بدائل، ويدمجها مع بياناتك دون حذف شيء.","hist.range":"المدة","hist.1y":"سنة","hist.2y":"سنتان","hist.5y":"5 سنوات","hist.10y":"10 سنوات","hist.btn":"تحميل البيانات","hist.running":"جاري التحميل...","hist.failed":"تعذر تحميل البيانات التاريخية — جرّب لاحقاً أو استورد ملف CSV.","hist.done":"تم تحميل {n} يوماً من {a} إلى {b}",
 "hist.s.gold":"الذهب (XAU/USD)","hist.s.sar":"الريال السعودي","hist.s.egp":"الجنيه المصري","hist.s.dxy":"مؤشر الدولار DXY","hist.s.vix":"مؤشر التقلب VIX","hist.s.ry":"العائد الحقيقي 10 سنوات (FRED)",
-"man.title":"التحديث اليدوي السريع","man.sub":"طريقة احتياطية إذا تعذر الجلب الآلي: تُطبَّق فوراً كسعر حالي.","man.apply":"تطبيق","man.fill":"تعبئة من القيم الحالية","man.log":"سجل مصادر الجلب الآلي","man.src":"يدوي","man.invalid":"أدخل السعر العالمي وسعري الصرف بقيم صحيحة","man.applied":"تم تطبيق الأسعار اليدوية كسعر حالي",
+"man.title":"التحديث اليدوي السريع","man.sub":"طريقة احتياطية إذا تعذر الجلب الآلي. الحقول بعملة ووحدة وعيار العرض المختارة أعلاه وتتحدّث معها تلقائياً؛ يُحوَّل السعر للدولار ويُطبَّق فوراً.","man.apply":"تطبيق","man.fill":"تعبئة من القيم الحالية","man.log":"سجل مصادر الجلب الآلي","man.src":"يدوي","man.invalid":"أدخل السعر العالمي وسعري الصرف بقيم صحيحة","man.applied":"تم تطبيق الأسعار اليدوية كسعر حالي",
 "log.src":"المصدر","log.kind":"النوع","log.res":"النتيجة","log.ms":"الزمن","log.gold":"ذهب","log.fx":"صرف","log.ok":"نجح","log.none":"لم تتم أي محاولة بعد.","log.allFailed":"كل المسارات فشلت","log.failed":"فشل",
 "row.title":"إضافة صف يومي","f.date":"التاريخ","f.gold":"السعر العالمي $/oz","f.sar":"صرف الريال (USD/SAR)","f.egp":"صرف الجنيه (USD/EGP)","f.ry":"العائد الحقيقي %","f.dxy":"مؤشر الدولار","f.vix":"VIX (اختياري)","row.add":"إضافة الصف","row.fetch":"جلب السعر الآن","row.stored":"البيانات المخزنة","row.demo":"بيانات تجريبية","row.clear":"مسح الكل","row.showAll":"عرض كل الصفوف","csv.import":"استيراد CSV","csv.export":"تصدير CSV","csv.fmt":"صيغة CSV: date,gold_usd_oz,usd_sar,usd_egp,real_yield,dxy,vix",
 "f.dateS":"التاريخ","f.goldS":"الذهب $/oz","f.ryS":"العائد الحقيقي","f.dxyS":"مؤشر الدولار","f.ret":"العائد اليومي","row.none":"لا توجد بيانات مخزنة.","row.del":"حذف","row.delQ":"حذف صف {d}؟","row.invalid":"أدخل التاريخ والسعر العالمي بقيم صحيحة","row.jump":"السعر يختلف أكثر من 15% عن آخر صف — هل أنت متأكد؟","row.added":"تمت إضافة الصف وحفظه","row.clearQ":"مسح كل البيانات المخزنة؟ لا يمكن التراجع (صدّر CSV أولاً).","row.cleared":"تم مسح البيانات","row.demoQ":"سيتم استبدال البيانات الحالية ببيانات تجريبية مصطنعة. متابعة؟","row.demoDone":"تم تحميل 400 يوم من بيانات مصطنعة للتجربة — ليست أسعاراً حقيقية",
@@ -72,7 +72,7 @@ ar: {
 "help.fvModel":"المعادلة تقول: القيمة العادلة = ثابت + أثر الفائدة الحقيقية + أثر الدولار + أثر مشتريات البنوك المركزية + أثر المخاطر. المعاملات β تحدد قوة كل أثر وإشارته (الإشارة السالبة تعني أن ارتفاع العامل يخفض الذهب). القيم الأولية أمثلة؛ استبدلها بقيمك أو اضغط «تطبيق» من شاشة الدراسات الإحصائية.",
 "help.fvRes":"<b>نسبة العدالة = السعر السوقي ÷ القيمة العادلة.</b> أكبر من 1.15: السعر مبالغ فيه. بين 0.85 و1.15: عادل. أقل من 0.85: أقل من قيمته. النسبة تقول إن كان السعر بعيداً عن المنطق الاقتصادي، ولا تقول متى سيعود.",
 "help.hist":"الزر يجلب أسعار الذهب والصرف ومؤشر الدولار والتقلب والفائدة الحقيقية لسنوات من مصادر مجانية، ويدمجها مع بياناتك دون حذف شيء. كلما زادت البيانات صارت التقديرات الإحصائية أدق. إذا فشل مصدر يجرّب التطبيق الذي يليه.",
-"help.manual":"إذا تعذر الجلب الآلي اكتب السعر وسعري الصرف بنفسك واضغط «تطبيق»: يُستخدم فوراً كسعر حالي في كل الشاشات. مناسب للطوارئ أو للتجربة.",
+"help.manual":"اكتب سعر الذهب بعملة ووحدة وعيار العرض المختارة أعلاه (مثلاً جنيه لكل جرام عيار 21) وسعر صرفها مقابل الدولار، ثم اضغط «تطبيق». يحوّله البرنامج تلقائياً إلى دولار للأونصة ويعرض المعادل قبل التطبيق. الحقول تتحدّث تلقائياً عند تغيير الدولة أو الوزن أو العيار، وبعد كل جلب آلي.",
 "help.rowform":"أضف يوماً واحداً يدوياً (التاريخ والسعر على الأقل). الحقول الاختيارية (العائد الحقيقي، الدولار، VIX) تُستخدم في شاشتي الدراسات والتقييم العادل.",
 "help.table":"كل صف هو يوم تداول. عمود «العائد اليومي» هو نسبة تغيّر السعر عن اليوم السابق (أخضر صعود وأحمر هبوط). تُعرض أحدث 250 صفاً، والبيانات كلها مخزنة على جهازك.",
 "help.params":"<ul><li><b>lambda:</b> سرعة استجابة التقلب للأخبار الجديدة (0.94 معيار شائع؛ الأقل أسرع).</li><li><b>nu:</b> سُمك الذيول: الأقل يعني توقع حركات حادة أكثر (قلّله إلى 3 في الأزمات).</li><li><b>مضاعف sigma:</b> يكبّر أو يصغّر النطاقات؛ يقترحه اختبار التغطية.</li><li><b>نموذج التقلب:</b> EWMA بسيط وسريع، وGARCH أدق مع بيانات طويلة (250 يوماً فأكثر).</li><li><b>أساس التحليل:</b> «عملة السوق» يحلل السعر المحلي كما يدفعه الناس فيتضمن حركة الصرف (مهم للجنيه المصري)، و«الدولار» يحلل الذهب وحده ثم يحوّل بسعر الصرف الحالي.</li></ul>",
@@ -100,7 +100,7 @@ ar: {
 "st.basis.local":"عملة السوق (تتضمن حركة الصرف)",
 "st.basis.usd":"الدولار ثم تحويل بالصرف الحالي",
 "rs.viewNote":"التحليل بعملة {c} لكل {u} · عيار {k} · الأساس: {b}. العلاقات الكلية (الانحدار والارتباط) تُحسب بالدولار لأنها علاقات عالمية.",
-"man.warnGold":"السعر المدخل {v} دولار للأونصة يختلف كثيراً عن آخر سعر معروف ({r}). هل أدخلت سعر الجرام أو بعملة محلية؟ هذه الخانة بالدولار لكل أونصة.",
+"man.warnGold":"السعر المدخل {v} يعادل {usd} دولار للأونصة، ويختلف كثيراً عن آخر سعر معروف ({r} دولار للأونصة). تأكد من الدولة والوزن والعيار المختارة أعلاه.",
 "man.warnSar":"صرف الريال {v} بعيد عن الربط المعتاد 3.75.",
 "man.warnEgp":"صرف الجنيه {v} يختلف كثيراً عن آخر قيمة معروفة ({r}).",
 "man.confirm":"هل تريد التطبيق رغم ذلك؟",
@@ -116,7 +116,9 @@ ar: {
 "b.whichWrong":"إن كان سعرك اليدوي هو الصحيح فالتاريخ المخزن من مصدر غير متسق: اختر «إعادة تحميل التاريخ». وإن كان السعر اليدوي خاطئاً فاختر الحذف.",
 "sg.fvUncal":"القيمة العادلة لا تدخل في الإشارة: معاملات النموذج افتراضية وغير معايرة (طبّق معاملات الانحدار من «الدراسات الإحصائية» أو أدخل معاملاتك).",
 "fv.uncalShort":"غير معاير",
-"fv.uncal":"المعاملات افتراضية توضيحية؛ لا تُستخدم هذه النسبة في إشارة التداول حتى تعايرها."
+"fv.uncal":"المعاملات افتراضية توضيحية؛ لا تُستخدم هذه النسبة في إشارة التداول حتى تعايرها.",
+"man.priceLbl":"السعر ({u}) · عيار {k}",
+"man.preview":"سيُطبَّق: {v} {u} = {usd} دولار للأونصة"
 },
 en: {
 "app.title":"GoldQuant — Gold Valuation & Daily Forecast","app.short":"Gold Valuation","app.sub":"Saudi Arabia · Egypt · Global — Last calibrated 2026-11-26",
@@ -146,7 +148,7 @@ en: {
 "fv.fvLabel":"Model fair value","fv.market":"Market price","fv.gap":"Gap","fv.bad":"Nonsensical value — check coefficients","fv.ratioLbl":"Fairness ratio (market ÷ fair)","fv.legend":"Overvalued > 1.15 · Fair 0.85–1.15 · Undervalued < 0.85","fv.local":"Fair value in the display currency","fv.fair24":"Fair","fv.mkt24":"Market",
 "hist.title":"Download historical data","hist.desc":"Downloads gold, SAR, EGP, dollar index, VIX and real yield daily from several sources with fallbacks, and merges them with your data without deleting anything.","hist.range":"Period","hist.1y":"1 year","hist.2y":"2 years","hist.5y":"5 years","hist.10y":"10 years","hist.btn":"Download data","hist.running":"Downloading...","hist.failed":"Could not download historical data — retry later or import a CSV file.","hist.done":"Downloaded {n} days from {a} to {b}",
 "hist.s.gold":"Gold (XAU/USD)","hist.s.sar":"Saudi riyal","hist.s.egp":"Egyptian pound","hist.s.dxy":"Dollar index DXY","hist.s.vix":"Volatility index VIX","hist.s.ry":"10y real yield (FRED)",
-"man.title":"Quick manual update","man.sub":"Fallback when automatic fetching fails: applied immediately as the current price.","man.apply":"Apply","man.fill":"Fill from current values","man.log":"Automatic fetch log","man.src":"manual","man.invalid":"Enter the global price and both FX rates with valid values","man.applied":"Manual prices applied as current",
+"man.title":"Quick manual update","man.sub":"Fallback when automatic fetching fails. Fields use the display currency, unit and karat selected above and update with them; the price is converted to USD and applied immediately.","man.apply":"Apply","man.fill":"Fill from current values","man.log":"Automatic fetch log","man.src":"manual","man.invalid":"Enter the global price and both FX rates with valid values","man.applied":"Manual prices applied as current",
 "log.src":"Source","log.kind":"Type","log.res":"Result","log.ms":"Time","log.gold":"Gold","log.fx":"FX","log.ok":"ok","log.none":"No attempts yet.","log.allFailed":"all routes failed","log.failed":"failed",
 "row.title":"Add a daily row","f.date":"Date","f.gold":"Global price $/oz","f.sar":"SAR rate (USD/SAR)","f.egp":"EGP rate (USD/EGP)","f.ry":"Real yield %","f.dxy":"Dollar index","f.vix":"VIX (optional)","row.add":"Add row","row.fetch":"Fetch price now","row.stored":"Stored data","row.demo":"Demo data","row.clear":"Clear all","row.showAll":"Show all rows","csv.import":"Import CSV","csv.export":"Export CSV","csv.fmt":"CSV format: date,gold_usd_oz,usd_sar,usd_egp,real_yield,dxy,vix",
 "f.dateS":"Date","f.goldS":"Gold $/oz","f.ryS":"Real yield","f.dxyS":"Dollar idx","f.ret":"Daily return","row.none":"No stored data.","row.del":"Delete","row.delQ":"Delete row {d}?","row.invalid":"Enter a valid date and global price","row.jump":"Price differs by more than 15% from the last row — are you sure?","row.added":"Row added and saved","row.clearQ":"Clear all stored data? This cannot be undone (export CSV first).","row.cleared":"Data cleared","row.demoQ":"Current data will be replaced with synthetic demo data. Continue?","row.demoDone":"Loaded 400 days of synthetic data for testing — not real prices",
@@ -190,7 +192,7 @@ en: {
 "help.fvModel":"The equation reads: fair value = constant + real-yield effect + dollar effect + central-bank-buying effect + risk effect. The β coefficients set each effect's strength and sign (a negative sign means a rise in that factor lowers gold). Starting values are examples; replace them with yours or press “Apply” in the Statistical Lab.",
 "help.fvRes":"<b>Fairness ratio = market price ÷ fair value.</b> Above 1.15: overvalued. Between 0.85 and 1.15: fair. Below 0.85: undervalued. The ratio says whether the price is far from economic logic; it does not say when it will return.",
 "help.hist":"The button fetches gold, FX, dollar index, volatility and real-yield history for years from free sources and merges it with your data without deleting anything. More data makes statistical estimates sharper. If one source fails, the app tries the next.",
-"help.manual":"If automatic fetching fails, type the price and both FX rates yourself and press “Apply”: it is used immediately as the current price on every screen. Good for emergencies or testing.",
+"help.manual":"Type the gold price in the display currency, unit and karat selected above (e.g. EGP per gram, 21K) and its exchange rate against the dollar, then press “Apply”. The app converts it to USD per ounce and shows the equivalent before applying. The fields update automatically when you change the country, weight or karat, and after every automatic fetch.",
 "help.rowform":"Add a single day by hand (date and price at least). The optional fields (real yield, dollar index, VIX) are used by the Statistical Lab and Fair Value screens.",
 "help.table":"Each row is a trading day. The “Daily return” column is the price change versus the previous day (green up, red down). The latest 250 rows are shown; all data is stored on your device.",
 "help.params":"<ul><li><b>lambda:</b> how fast volatility reacts to new moves (0.94 is a common standard; lower is faster).</li><li><b>nu:</b> tail thickness: lower expects more violent moves (set 3 in crises).</li><li><b>Sigma multiplier:</b> widens or narrows the ranges; the coverage test suggests it.</li><li><b>Volatility model:</b> EWMA is simple and fast, GARCH is sharper with long history (250+ days).</li><li><b>Analysis basis:</b> “Market currency” analyses the local price as people pay it, so it includes exchange-rate moves (important for the Egyptian pound); “USD” analyses gold alone and then converts at the current rate.</li></ul>",
@@ -218,7 +220,7 @@ en: {
 "st.basis.local":"Market currency (includes FX moves)",
 "st.basis.usd":"USD, converted at the current rate",
 "rs.viewNote":"Analysis in {c} per {u} · {k}K · basis: {b}. Macro relations (regression and correlation) use USD because they are global relationships.",
-"man.warnGold":"The price you entered, {v} USD per ounce, is far from the last known price ({r}). Did you enter a per-gram or local-currency price? This field is USD per ounce.",
+"man.warnGold":"The price you entered, {v}, equals {usd} USD per ounce, far from the last known price ({r} USD per ounce). Check the country, weight and karat selected above.",
 "man.warnSar":"The SAR rate {v} is far from the usual 3.75 peg.",
 "man.warnEgp":"The EGP rate {v} is far from the last known value ({r}).",
 "man.confirm":"Apply anyway?",
@@ -234,6 +236,8 @@ en: {
 "b.whichWrong":"If your manual price is correct, the stored history comes from an inconsistent source: choose “Reload history”. If the manual price is wrong, choose remove.",
 "sg.fvUncal":"Fair value is not used in the signal: the model coefficients are illustrative defaults (apply the regression coefficients from the Statistical Lab or enter yours).",
 "fv.uncalShort":"not calibrated",
-"fv.uncal":"Coefficients are illustrative defaults; this ratio is not used in the trading signal until you calibrate it."
+"fv.uncal":"Coefficients are illustrative defaults; this ratio is not used in the trading signal until you calibrate it.",
+"man.priceLbl":"Price ({u}) · {k}K",
+"man.preview":"Will apply: {v} {u} = {usd} USD per ounce"
 }
 };
