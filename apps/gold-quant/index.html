@@ -5,8 +5,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GoldQuant</title>
+<meta name="theme-color" content="#a16207">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="GoldQuant">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-180.png">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
-<style id="tw-fallback">*,:after,:before{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgba(59,130,246,.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgba(59,130,246,.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/*! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com*/*,:after,:before{box-sizing:border-box;border:0 solid #e5e7eb}:after,:before{--tw-content:""}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;-o-tab-size:4;tab-size:4;font-family:ui-sans-serif,system-ui,sans-serif,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol,Noto Color Emoji;font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,Liberation Mono,Courier New,monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0}fieldset,legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::-moz-placeholder,textarea::-moz-placeholder{opacity:1;color:#9ca3af}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.col-span-2{grid-column:span 2/span 2}.mx-auto{margin-left:auto;margin-right:auto}.mb-1{margin-bottom:.25rem}.mb-2{margin-bottom:.5rem}.mb-3{margin-bottom:.75rem}.mb-4{margin-bottom:1rem}.mt-1{margin-top:.25rem}.mt-2{margin-top:.5rem}.mt-3{margin-top:.75rem}.mt-4{margin-top:1rem}.flex{display:flex}.table{display:table}.grid{display:grid}.hidden{display:none}.h-16{height:4rem}.max-h-\[480px\]{max-height:480px}.min-h-screen{min-height:100vh}.w-16{width:4rem}.w-44{width:11rem}.w-48{width:12rem}.max-w-7xl{max-width:80rem}.flex-1{flex:1 1 0%}.cursor-pointer{cursor:pointer}.resize{resize:both}.list-disc{list-style-type:disc}.grid-cols-1{grid-template-columns:repeat(1,minmax(0,1fr))}.grid-cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}.flex-col{flex-direction:column}.flex-wrap{flex-wrap:wrap}.items-end{align-items:flex-end}.items-center{align-items:center}.justify-center{justify-content:center}.justify-between{justify-content:space-between}.gap-2{gap:.5rem}.gap-3{gap:.75rem}.gap-4{gap:1rem}.space-y-1>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(.25rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(.25rem*var(--tw-space-y-reverse))}.space-y-1\.5>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(.375rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(.375rem*var(--tw-space-y-reverse))}.space-y-2>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(.5rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(.5rem*var(--tw-space-y-reverse))}.space-y-3>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(.75rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(.75rem*var(--tw-space-y-reverse))}.space-y-4>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1rem*var(--tw-space-y-reverse))}.self-center{align-self:center}.overflow-x-auto{overflow-x:auto}.overflow-y-auto{overflow-y:auto}.rounded-2xl{border-radius:1rem}.border-t{border-top-width:1px}.p-3{padding:.75rem}.p-4{padding:1rem}.p-5{padding:1.25rem}.px-4{padding-left:1rem;padding-right:1rem}.py-3{padding-top:.75rem;padding-bottom:.75rem}.py-5{padding-top:1.25rem;padding-bottom:1.25rem}.ps-5{padding-inline-start:1.25rem}.pt-3{padding-top:.75rem}.text-2xl{font-size:1.5rem;line-height:2rem}.text-3xl{font-size:1.875rem;line-height:2.25rem}.text-\[11px\]{font-size:11px}.text-lg{font-size:1.125rem;line-height:1.75rem}.text-sm{font-size:.875rem;line-height:1.25rem}.text-xl{font-size:1.25rem;line-height:1.75rem}.text-xs{font-size:.75rem;line-height:1rem}.font-bold{font-weight:700}.font-normal{font-weight:400}.font-semibold{font-weight:600}.leading-5{line-height:1.25rem}.leading-7{line-height:1.75rem}.leading-tight{line-height:1.25}.filter{filter:var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow)}@media (min-width:640px){.sm\:ms-2{margin-inline-start:.5rem}.sm\:mt-0{margin-top:0}.sm\:gap-4{gap:1rem}.sm\:p-4{padding:1rem}.sm\:text-2xl{font-size:1.5rem;line-height:2rem}.sm\:text-sm{font-size:.875rem;line-height:1.25rem}}@media (min-width:768px){.md\:col-span-3{grid-column:span 3/span 3}.md\:col-span-4{grid-column:span 4/span 4}.md\:col-span-7{grid-column:span 7/span 7}.md\:grid-cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}.md\:grid-cols-4{grid-template-columns:repeat(4,minmax(0,1fr))}.md\:grid-cols-5{grid-template-columns:repeat(5,minmax(0,1fr))}.md\:grid-cols-7{grid-template-columns:repeat(7,minmax(0,1fr))}}@media (min-width:1024px){.lg\:col-span-2{grid-column:span 2/span 2}.lg\:grid-cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}.lg\:grid-cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}}</style>
+<style id="tw-fallback">*,:after,:before{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgba(59,130,246,.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgba(59,130,246,.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/*! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com*/*,:after,:before{box-sizing:border-box;border:0 solid #e5e7eb}:after,:before{--tw-content:""}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;-o-tab-size:4;tab-size:4;font-family:ui-sans-serif,system-ui,sans-serif,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol,Noto Color Emoji;font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,Liberation Mono,Courier New,monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0}fieldset,legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::-moz-placeholder,textarea::-moz-placeholder{opacity:1;color:#9ca3af}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.fixed{position:fixed}.col-span-2{grid-column:span 2/span 2}.mx-auto{margin-left:auto;margin-right:auto}.mb-1{margin-bottom:.25rem}.mb-2{margin-bottom:.5rem}.mb-3{margin-bottom:.75rem}.mb-4{margin-bottom:1rem}.mt-1{margin-top:.25rem}.mt-2{margin-top:.5rem}.mt-3{margin-top:.75rem}.mt-4{margin-top:1rem}.flex{display:flex}.table{display:table}.grid{display:grid}.hidden{display:none}.h-16{height:4rem}.max-h-\[480px\]{max-height:480px}.min-h-screen{min-height:100vh}.w-16{width:4rem}.w-44{width:11rem}.w-48{width:12rem}.max-w-7xl{max-width:80rem}.flex-1{flex:1 1 0%}.cursor-pointer{cursor:pointer}.resize{resize:both}.list-disc{list-style-type:disc}.grid-cols-1{grid-template-columns:repeat(1,minmax(0,1fr))}.grid-cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}.flex-col{flex-direction:column}.flex-wrap{flex-wrap:wrap}.items-end{align-items:flex-end}.items-center{align-items:center}.justify-center{justify-content:center}.justify-between{justify-content:space-between}.gap-2{gap:.5rem}.gap-3{gap:.75rem}.gap-4{gap:1rem}.space-y-1>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(.25rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(.25rem*var(--tw-space-y-reverse))}.space-y-1\.5>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(.375rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(.375rem*var(--tw-space-y-reverse))}.space-y-2>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(.5rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(.5rem*var(--tw-space-y-reverse))}.space-y-3>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(.75rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(.75rem*var(--tw-space-y-reverse))}.space-y-4>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1rem*var(--tw-space-y-reverse))}.self-center{align-self:center}.overflow-x-auto{overflow-x:auto}.overflow-y-auto{overflow-y:auto}.rounded-2xl{border-radius:1rem}.border-t{border-top-width:1px}.p-3{padding:.75rem}.p-4{padding:1rem}.p-5{padding:1.25rem}.px-4{padding-left:1rem;padding-right:1rem}.py-3{padding-top:.75rem;padding-bottom:.75rem}.py-5{padding-top:1.25rem;padding-bottom:1.25rem}.pb-8{padding-bottom:2rem}.ps-5{padding-inline-start:1.25rem}.pt-3{padding-top:.75rem}.text-2xl{font-size:1.5rem;line-height:2rem}.text-3xl{font-size:1.875rem;line-height:2.25rem}.text-\[11px\]{font-size:11px}.text-lg{font-size:1.125rem;line-height:1.75rem}.text-sm{font-size:.875rem;line-height:1.25rem}.text-xl{font-size:1.25rem;line-height:1.75rem}.text-xs{font-size:.75rem;line-height:1rem}.font-bold{font-weight:700}.font-normal{font-weight:400}.font-semibold{font-weight:600}.leading-5{line-height:1.25rem}.leading-7{line-height:1.75rem}.leading-tight{line-height:1.25}.filter{filter:var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow)}@media (min-width:640px){.sm\:ms-2{margin-inline-start:.5rem}.sm\:mt-0{margin-top:0}.sm\:gap-4{gap:1rem}.sm\:p-4{padding:1rem}.sm\:text-2xl{font-size:1.5rem;line-height:2rem}.sm\:text-sm{font-size:.875rem;line-height:1.25rem}}@media (min-width:768px){.md\:col-span-3{grid-column:span 3/span 3}.md\:col-span-4{grid-column:span 4/span 4}.md\:col-span-7{grid-column:span 7/span 7}.md\:grid-cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}.md\:grid-cols-4{grid-template-columns:repeat(4,minmax(0,1fr))}.md\:grid-cols-5{grid-template-columns:repeat(5,minmax(0,1fr))}.md\:grid-cols-7{grid-template-columns:repeat(7,minmax(0,1fr))}}@media (min-width:1024px){.lg\:col-span-2{grid-column:span 2/span 2}.lg\:grid-cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}.lg\:grid-cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}}</style>
 <script src="https://cdn.tailwindcss.com"></script>
 <script>if (window.tailwind) { tailwind.config = { darkMode: 'class' }; }</script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
@@ -85,6 +92,17 @@
   .interp li { margin-bottom:2px; }
   .spin { display:inline-block; width:14px; height:14px; border:2px solid var(--border); border-top-color:var(--gold); border-radius:50%; animation:sp .8s linear infinite; vertical-align:middle; }
   @keyframes sp { to { transform:rotate(360deg); } }
+  /* الإرشادات: شرح مبسّط لكل شاشة ورسم */
+  .help { margin:8px 0 12px; border:1px dashed var(--border); border-radius:10px; background:color-mix(in srgb, var(--blue) 5%, transparent); }
+  .help summary { cursor:pointer; padding:6px 12px; font-size:13px; font-weight:600; color:var(--blue); list-style:none; }
+  .help summary::-webkit-details-marker { display:none; }
+  .help[open] summary { border-bottom:1px dashed var(--border); }
+  .help-body { padding:10px 12px; font-size:13.5px; line-height:1.9; color:var(--ink-2); }
+  .help-body b { color:var(--ink); }
+  .help-body ul { margin:4px 0; padding-inline-start:18px; list-style:disc; }
+  html.nohelp .help { display:none; }
+  #btnHelp[aria-pressed=true] { border-color:var(--blue); color:var(--blue); }
+  #updateBar { position:sticky; top:0; z-index:60; }
 </style>
 </head>
 <body class="min-h-screen">
@@ -100,8 +118,9 @@
     <div class="flex items-center gap-2 flex-wrap">
       <div class="live" id="liveBadge"><span class="dot" id="liveDot"></span><span id="liveText"></span></div>
       <button class="btn" id="btnFetchHeader" data-i18n="btn.refresh"></button>
+      <button class="btn" id="btnHelp" aria-pressed="true" data-i18n-title="help.toggle">ⓘ</button>
       <button class="btn" id="btnLang" aria-label="Language">EN</button>
-      <button class="btn" id="btnTheme" aria-label="Theme">◐</button>
+      <button class="btn" id="btnTheme" aria-label="Theme"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/></svg></button>
     </div>
   </div>
   <div class="refbar"><div id="refreshFill"></div></div>
@@ -115,13 +134,18 @@
   </nav>
 </header>
 
+<div id="updateBar" class="hidden banner banner-good flex flex-wrap items-center justify-between gap-2" style="border-radius:0">
+  <span id="updateMsg"></span><button class="btn btn-primary" id="btnUpdate" data-i18n="upd.btn"></button>
+</div>
 <main class="max-w-7xl mx-auto px-4 py-5 space-y-4">
   <div id="banners" class="space-y-2"></div>
 
   <!-- ===== الرئيسية ===== -->
   <section id="tab-dashboard" class="tab space-y-4">
+    <div data-help="help.tab.dashboard"></div>
     <div class="card p-4">
       <div class="mb-3"><h2 class="font-bold" data-i18n="mk.title"></h2><p class="text-xs faint" data-i18n="mk.hint"></p></div>
+      <div data-help="help.markets"></div>
       <div id="marketChips" class="flex flex-wrap gap-2" role="group"></div>
     </div>
     <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4" id="kpis"></div>
@@ -133,16 +157,19 @@
             <button data-r="30" aria-pressed="false">30D</button><button data-r="90" aria-pressed="true">90D</button><button data-r="365" aria-pressed="false">1Y</button><button data-r="0" aria-pressed="false" data-i18n="ch.all"></button>
           </div>
         </div>
+        <div data-help="help.priceChart"></div>
         <div class="chart-box"><canvas id="chartHistory"></canvas></div>
         <p id="historyEmpty" class="text-sm faint hidden" data-i18n="ch.empty"></p>
       </div>
       <div class="card p-5 flex flex-col" id="signalCard"></div>
     </div>
+    <div data-help="help.mini"></div>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="miniStats"></div>
   </section>
 
   <!-- ===== التنبؤ ===== -->
   <section id="tab-forecast" class="tab space-y-4 hidden">
+    <div data-help="help.tab.forecast"></div>
     <div class="card p-4 flex flex-wrap items-end gap-4">
       <div class="w-48">
         <label class="lbl flex items-center gap-2"><span data-i18n="fc.mu"></span>
@@ -157,20 +184,25 @@
       <div class="card p-4">
         <h2 class="font-bold mb-1" data-i18n="fc.bands"></h2>
         <p class="text-xs faint mb-3" data-i18n="fc.bands.sub"></p>
+        <div data-help="help.bands"></div>
         <table class="tbl" id="tblGlobalBands"></table>
+        <div data-help="help.probs"></div>
         <div class="grid grid-cols-2 gap-3 mt-4" id="probStats"></div>
       </div>
       <div class="card p-4">
         <h2 class="font-bold mb-1" data-i18n="fc.box"></h2>
         <p class="text-xs faint mb-2" data-i18n="fc.box.sub"></p>
+        <div data-help="help.box"></div>
         <div class="chart-box" style="height:180px"><canvas id="chartBox"></canvas></div>
         <h3 class="font-semibold text-sm mt-3 mb-1" data-i18n="fc.dist"></h3>
+        <div data-help="help.dist"></div>
         <div class="chart-box" style="height:170px"><canvas id="chartHist"></canvas></div>
       </div>
     </div>
     <div class="card p-4">
       <h2 class="font-bold mb-1" data-i18n="fc.local"></h2>
       <p class="text-xs faint mb-3" id="localMeta"></p>
+      <div data-help="help.local"></div>
       <div class="overflow-x-auto"><table class="tbl" id="tblLocal"></table></div>
     </div>
     <div class="card p-4 space-y-3">
@@ -180,6 +212,7 @@
         <button class="btn" id="btnChristoffersen" data-i18n="bt.chr"></button>
       </div>
       <p class="text-xs faint" data-i18n="bt.note"></p>
+      <div data-help="help.backtest"></div>
       <div id="coverageResult"></div><div id="christResult"></div>
       <div class="chart-box hidden" id="btChartWrap"><canvas id="chartBacktest"></canvas></div>
     </div>
@@ -187,10 +220,12 @@
 
   <!-- ===== التقييم العادل ===== -->
   <section id="tab-fair" class="tab space-y-4 hidden">
+    <div data-help="help.tab.fair"></div>
     <div class="card p-4">
       <h2 class="font-bold mb-1" data-i18n="fv.title"></h2>
       <p class="text-sm muted mb-1 num" style="direction:ltr">FV = α + β1·RealYield + β2·DXY + β3·CB_Flows + β4·Geo_Index</p>
       <p class="text-xs faint mb-4" data-i18n="fv.sub"></p>
+      <div data-help="help.fvModel"></div>
       <div class="grid grid-cols-2 md:grid-cols-5 gap-3" id="coeffInputs"></div>
     </div>
     <div class="card p-4">
@@ -202,18 +237,21 @@
       </div>
       <p class="text-xs faint mt-2" data-i18n="fv.dxyNote"></p>
     </div>
+    <div data-help="help.fvRes"></div>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="fairResult"></div>
     <div class="card p-4"><h2 class="font-bold mb-2" data-i18n="fv.local"></h2><div class="overflow-x-auto"><table class="tbl" id="tblFairLocal"></table></div></div>
   </section>
 
   <!-- ===== الدراسات الإحصائية ===== -->
-  <section id="tab-research" class="tab space-y-4 hidden"><div id="researchRoot"></div></section>
+  <section id="tab-research" class="tab space-y-4 hidden"><div data-help="help.tab.research"></div><div id="researchRoot" class="space-y-4"></div></section>
 
   <!-- ===== البيانات ===== -->
   <section id="tab-data" class="tab space-y-4 hidden">
+    <div data-help="help.tab.data"></div>
     <div class="card p-4">
       <h2 class="font-bold mb-1" data-i18n="hist.title"></h2>
       <p class="text-xs faint mb-3" data-i18n="hist.desc"></p>
+      <div data-help="help.hist"></div>
       <div class="flex flex-wrap items-end gap-3">
         <div class="w-44"><label class="lbl" data-i18n="hist.range"></label>
           <select id="histRange" class="inp"><option value="1y" data-i18n="hist.1y"></option><option value="2y" data-i18n="hist.2y"></option><option value="5y" selected data-i18n="hist.5y"></option><option value="10y" data-i18n="hist.10y"></option></select></div>
@@ -225,6 +263,7 @@
     <div class="card p-4">
       <h2 class="font-bold mb-1" data-i18n="man.title"></h2>
       <p class="text-xs faint mb-3" data-i18n="man.sub"></p>
+      <div data-help="help.manual"></div>
       <div class="grid grid-cols-2 md:grid-cols-5 gap-3 items-end">
         <div><label class="lbl" data-i18n="f.gold"></label><input type="number" step="0.01" id="qGold" class="inp"></div>
         <div><label class="lbl">USD/SAR</label><input type="number" step="0.0001" id="qSar" class="inp" value="3.75"></div>
@@ -235,7 +274,8 @@
       <details class="mt-3"><summary class="text-sm muted cursor-pointer" data-i18n="man.log"></summary><div class="overflow-x-auto mt-2" id="fetchLog"></div></details>
     </div>
     <div class="card p-4">
-      <h2 class="font-bold mb-3" data-i18n="row.title"></h2>
+      <h2 class="font-bold mb-1" data-i18n="row.title"></h2>
+      <div data-help="help.rowform"></div>
       <form id="rowForm" class="grid grid-cols-2 md:grid-cols-7 gap-3 items-end">
         <div><label class="lbl" data-i18n="f.date"></label><input type="date" id="fDate" class="inp" required></div>
         <div><label class="lbl" data-i18n="f.gold"></label><input type="number" step="0.01" id="fGold" class="inp" required></div>
@@ -262,6 +302,7 @@
         </div>
       </div>
       <p class="text-xs faint mb-2" data-i18n="csv.fmt"></p>
+      <div data-help="help.table"></div>
       <div class="overflow-x-auto max-h-[480px] overflow-y-auto"><table class="tbl" id="tblData"></table></div>
       <button class="btn mt-2 hidden" id="btnShowAll" data-i18n="row.showAll"></button>
     </div>
@@ -269,6 +310,7 @@
 
   <!-- ===== الإعدادات ===== -->
   <section id="tab-settings" class="tab space-y-4 hidden">
+    <div data-help="help.tab.settings"></div>
     <div class="card p-4">
       <h2 class="font-bold mb-3" data-i18n="st.prem"></h2>
       <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -278,7 +320,8 @@
       <p class="text-xs faint mt-2" data-i18n="st.premNote"></p>
     </div>
     <div class="card p-4">
-      <h2 class="font-bold mb-3" data-i18n="st.model"></h2>
+      <h2 class="font-bold mb-1" data-i18n="st.model"></h2>
+      <div data-help="help.params"></div>
       <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
         <div><label class="lbl">lambda (EWMA)</label><input type="number" step="0.01" min="0.5" max="0.999" id="sLambda" class="inp"></div>
         <div><label class="lbl flex items-center gap-2">nu (t) <span class="tip" tabindex="0" data-i18n-tip="st.nu.tip">?</span></label><input type="number" step="0.5" min="2.1" id="sNu" class="inp"></div>
@@ -288,7 +331,8 @@
       </div>
     </div>
     <div class="card p-4">
-      <h2 class="font-bold mb-3" data-i18n="st.live"></h2>
+      <h2 class="font-bold mb-1" data-i18n="st.live"></h2>
+      <div data-help="help.live"></div>
       <div class="grid grid-cols-2 md:grid-cols-4 gap-3 items-end">
         <div><label class="lbl" data-i18n="st.refresh"></label><select id="sRefresh" class="inp"><option value="0" data-i18n="st.off"></option><option value="1" data-i18n="st.m1"></option><option value="5" data-i18n="st.m5"></option><option value="15" data-i18n="st.m15"></option></select></div>
         <label class="flex items-center gap-2 text-sm col-span-2 md:col-span-3"><input type="checkbox" id="sAutoRow"> <span data-i18n="st.autoRow"></span></label>
@@ -306,6 +350,7 @@
     </div>
   </section>
 </main>
+<footer class="max-w-7xl mx-auto px-4 pb-8 text-xs faint"><span id="verInfo"></span></footer>
 <div id="toast" role="status"></div>
 
 <script>
@@ -313,7 +358,7 @@
 // ===================== القاموس: العربية والإنجليزية =====================
 const I18N = {
 ar: {
-"app.title":"GoldQuant — تقييم الذهب والتنبؤ اليومي","app.short":"تقييم الذهب","app.sub":"السعودية · مصر · عالمي — نموذج 2.0 · آخر معايرة 2026-11-26",
+"app.title":"GoldQuant — تقييم الذهب والتنبؤ اليومي","app.short":"تقييم الذهب","app.sub":"السعودية · مصر · عالمي — آخر معايرة 2026-11-26",
 "btn.refresh":"⟳ تحديث الآن",
 "tab.dashboard":"الرئيسية","tab.forecast":"التنبؤ","tab.fair":"التقييم العادل","tab.research":"الدراسات الإحصائية","tab.data":"البيانات","tab.settings":"الإعدادات",
 "mk.title":"اختر الأسواق","mk.hint":"يمكنك اختيار أكثر من سوق في نفس الوقت (سوق واحد على الأقل).","mk.SA":"السعودية","mk.EG":"مصر","mk.GL":"عالمي","mk.min":"يجب إبقاء سوق واحد على الأقل",
@@ -358,10 +403,48 @@ ar: {
 "rs.comp":"القراءة الإحصائية المركبة","rs.comp.sub":"تجمع الاتجاه والزخم وRSI والانحراف عن المتوسط وموقع التقلب والتقييم العادل في مؤشر واحد بين -1 و+1.","rs.pos":"إيجابية","rs.neg":"سلبية","rs.neu":"محايدة","rs.factor":"العامل","rs.value":"القيمة","rs.weight":"الوزن","rs.score":"الدرجة","rs.c.trend":"الاتجاه: السعر مقابل متوسط 200","rs.c.mom3":"زخم 3 أشهر","rs.c.mom12":"زخم 12 شهراً","rs.c.rsi":"RSI (14)","rs.c.z":"انحراف السعر عن متوسط 200 (z)","rs.c.vol":"موقع التقلب (مخاطر)","rs.c.val":"التقييم العادل (نسبة العدالة)",
 "rs.bt":"مقارنة النماذج رجعياً (Walk-forward)","rs.bt.sub":"إعادة تقدير GARCH كل 63 يوماً دون نظر للمستقبل، ومقارنة تغطية النطاقات بـ EWMA.","rs.cov80":"تغطية P10–P90 (الهدف 80%)","rs.cov90":"تغطية P5–P95 (الهدف 90%)","rs.btBest":"الأقرب لهدف التغطية 80%: {m}.",
 "rs.summary":"خلاصة تفسيرية",
-"in.fat":"العوائد ليست طبيعية والتفرطح الزائد {k}: الذيول سميكة، فاستخدام توزيع t في المحاكاة مبرَّر.","in.normal":"لا يُرفض افتراض الطبيعية للعوائد في هذه العينة.","in.nonstat":"لوغاريتم السعر غير مستقر (جذر أحادي): أي انحدار في المستويات يحتاج اختبار تكامل مشترك.","in.arch":"مربعات العوائد مترابطة ذاتياً: تجمّع التقلب موجود، وGARCH مناسب أكثر من تقلب ثابت.","in.trend":"أس هيرست {h}: ميل لاستمرار الاتجاه.","in.mr":"أس هيرست {h}: ميل للارتداد للمتوسط.","in.rw":"أس هيرست {h}: قريب من المسار العشوائي — لا ميزة اتجاهية واضحة.","in.vrMom":"نسبة التباين أكبر من 1 بدلالة: زخم قصير الأجل.","in.vrMr":"نسبة التباين أقل من 1 بدلالة: ارتداد قصير الأجل.","in.persist":"استمرارية التقلب {p} ونصف عمر الصدمة {h} يوماً: الصدمات تدوم طويلاً.","in.hiVol":"التقلب الحالي في الشريحة المرتفعة تاريخياً: وسّع هوامش الأمان.","in.loVol":"التقلب الحالي منخفض تاريخياً: ارتفاعه المفاجئ محتمل (عودة للمتوسط).","in.midVol":"التقلب الحالي ضمن المعتاد.","in.asym":"GJR يظهر أثراً غير متماثل: الهبوط يرفع التقلب أكثر من الصعود.","in.coint":"Engle–Granger يدعم علاقة تكامل مشترك: معاملات المستويات قابلة للاستخدام كقيمة عادلة.","in.spur":"لا يثبت تكامل مشترك: عامل قيمة انحدار المستويات بحذر، وقد تكون العلاقة زائفة."
+"in.fat":"العوائد ليست طبيعية والتفرطح الزائد {k}: الذيول سميكة، فاستخدام توزيع t في المحاكاة مبرَّر.","in.normal":"لا يُرفض افتراض الطبيعية للعوائد في هذه العينة.","in.nonstat":"لوغاريتم السعر غير مستقر (جذر أحادي): أي انحدار في المستويات يحتاج اختبار تكامل مشترك.","in.arch":"مربعات العوائد مترابطة ذاتياً: تجمّع التقلب موجود، وGARCH مناسب أكثر من تقلب ثابت.","in.trend":"أس هيرست {h}: ميل لاستمرار الاتجاه.","in.mr":"أس هيرست {h}: ميل للارتداد للمتوسط.","in.rw":"أس هيرست {h}: قريب من المسار العشوائي — لا ميزة اتجاهية واضحة.","in.vrMom":"نسبة التباين أكبر من 1 بدلالة: زخم قصير الأجل.","in.vrMr":"نسبة التباين أقل من 1 بدلالة: ارتداد قصير الأجل.","in.persist":"استمرارية التقلب {p} ونصف عمر الصدمة {h} يوماً: الصدمات تدوم طويلاً.","in.hiVol":"التقلب الحالي في الشريحة المرتفعة تاريخياً: وسّع هوامش الأمان.","in.loVol":"التقلب الحالي منخفض تاريخياً: ارتفاعه المفاجئ محتمل (عودة للمتوسط).","in.midVol":"التقلب الحالي ضمن المعتاد.","in.asym":"GJR يظهر أثراً غير متماثل: الهبوط يرفع التقلب أكثر من الصعود.","in.coint":"Engle–Granger يدعم علاقة تكامل مشترك: معاملات المستويات قابلة للاستخدام كقيمة عادلة.","in.spur":"لا يثبت تكامل مشترك: عامل قيمة انحدار المستويات بحذر، وقد تكون العلاقة زائفة.",
+"help.what":"اشرح لي",
+"help.toggle":"إظهار/إخفاء الإرشادات",
+"help.badge":"حالة السعر الحي: أخضر = حديث، أصفر = قديم، أحمر = تعذر الاتصال. العدّاد يبيّن موعد التحديث التالي.",
+"upd.msg":"يتوفر إصدار جديد من البرنامج ({v}).",
+"upd.btn":"تحديث الآن",
+"ver.info":"الإصدار {v}",
+"help.tab.dashboard":"<b>الغرض:</b> نظرة سريعة على سعر الذهب الآن، وهل هو مرتفع أم مناسب.<ul><li>اختر الدولة (أو أكثر) من الأزرار بالأعلى.</li><li>البطاقات تعرض سعر الجرام بعملة كل دولة، والسعر العالمي للأونصة بالدولار.</li><li>الرسم يوضح حركة السعر في المدة التي تختارها.</li><li>بطاقة الإشارة تلخّص: شراء أو حياد أو بيع، مع الأسباب.</li></ul>",
+"help.tab.forecast":"<b>الغرض:</b> تقدير المجال الذي قد يتحرك فيه السعر غداً. لا أحد يعرف السعر بالتحديد، لذلك نعرض <b>نطاقاً</b> بدل رقم واحد. اضغط «تحديث المحاكاة» لإعادة الحساب بعد تغيير أي إعداد.",
+"help.tab.fair":"<b>الغرض:</b> هل السعر الحالي أعلى أم أقل مما تبرره الظروف الاقتصادية (الفائدة الحقيقية وقوة الدولار والمخاطر)؟ النموذج يحسب «قيمة عادلة» ثم يقارنها بالسعر. المعاملات الافتراضية أمثلة فقط؛ استبدلها بمعاملاتك أو احسبها من شاشة الدراسات الإحصائية.",
+"help.tab.research":"<b>الغرض:</b> مختبر يفحص بيانات الذهب التاريخية ليعرف طبيعة حركته: هادئة أم متقلبة؟ تميل للاستمرار أم للعودة؟ نتائجه تحسّن النطاقات في شاشة التنبؤ. لا تحتاج أن تفهم المعادلات: اقرأ عبارة <b>النتيجة</b> وملخص التفسير في آخر الصفحة.",
+"help.tab.data":"<b>الغرض:</b> مخزن بياناتك، وكل الحسابات تُبنى على الصفوف هنا. يمكنك تحميل سنوات من البيانات تلقائياً، أو إضافة يوم يدوياً، أو استيراد ملف CSV. البيانات تبقى على جهازك فقط.",
+"help.tab.settings":"<b>الغرض:</b> ضبط المصنعية وطريقة حساب التقلب وفترة التحديث التلقائي. إن لم تكن متأكداً اترك القيم الافتراضية، فهي مناسبة لمعظم الحالات.",
+"help.markets":"اضغط على اسم الدولة لإظهار أسعارها أو إخفائها، ويمكنك اختيار أكثر من دولة. الرمز بجانب كل دولة هو عملتها: ريال سعودي (SAR)، جنيه مصري (EGP)، ودولار (USD) للسعر العالمي. يجب أن تبقى دولة واحدة على الأقل.",
+"help.priceChart":"الخط يمثّل سعر أونصة الذهب بالدولار يوماً بعد يوم، وارتفاع الخط يعني ارتفاع السعر. اختر المدة من الأزرار (30 يوماً، 90 يوماً، سنة، الكل). مرّر إصبعك أو المؤشر فوق الخط لترى سعر أي يوم. المدد الطويلة تُظهر الاتجاه العام، والقصيرة تُظهر التذبذب اليومي.",
+"help.signal":"إشارة بسيطة تجمع عدة أدلة:<ul><li>هل السعر <b>أعلى أو أقل من قيمته العادلة</b>؟</li><li>هل خرج السعر اليوم عن المجال المتوقع أمس؟ هذا قد يعني مبالغة في الصعود أو الهبوط.</li><li>انحيازك اليدوي (mu) إن وضعته.</li></ul>كل سبب يضيف نقطة أو ينقصها: مجموع +1 فأكثر = شراء، −1 فأقل = بيع، وما بينهما حياد. <b>هذه قراءة إحصائية وليست نصيحة استثمارية.</b>",
+"help.mini":"<b>التقلب اليومي:</b> كم يتحرك السعر عادةً في اليوم (0.8% تعني حركة نموذجية بهذا القدر). <b>نطاق الثقة 80%:</b> المجال الذي نتوقع أن يقع فيه سعر الغد في 8 مرات من كل 10. <b>البيانات المخزنة:</b> عدد الأيام المستخدمة في الحساب؛ كلما زادت صارت التقديرات أوثق.",
+"help.bands":"الجدول يرتّب سيناريوهات الغد من الأدنى للأعلى. <b>P50</b> هو الوسط (نصف السيناريوهات أعلى ونصفها أدنى). <b>P10 وP90</b> يحيطان بـ 80% من الحالات، و<b>P5 وP95</b> يحيطان بـ 90%. مثال: إذا كان P95 يساوي 4,400 فالسعر تجاوز هذا الرقم في 5 سيناريوهات فقط من كل 100.",
+"help.probs":"احتمالات من المحاكاة: أن يتجاوز السعر الحد الأعلى (P90)، أو يكسر الحد الأدنى (P10)، أو يغلق فوق سعر اليوم، أو يتجاوز سعراً تحدده أنت في الخانة بالأعلى. الأرقام الصغيرة تحت كل احتمال تقارن بما حدث فعلاً في الماضي بعد تشغيل «اختبار التغطية».",
+"help.box":"الصندوق الفاتح العريض = المجال الذي يقع فيه السعر بنسبة 90%، والأضيق الأغمق = 80%، والخط الداكن = الوسيط، والمعيّن الأسود = السعر الحالي. إذا كان المعيّن قريباً من منتصف الصناديق فالسعر ضمن المتوقع. كلما اتسعت الصناديق زاد عدم اليقين.",
+"help.dist":"كل عمود يعدّ عدد السيناريوهات التي انتهت عند سعر معيّن من بين آلاف السيناريوهات. الشكل الجرسي يعني أن الأسعار القريبة من الوسط أكثر احتمالاً، والأطراف البعيدة أقل احتمالاً لكنها ممكنة.",
+"help.local":"تحويل السعر العالمي إلى سعر <b>جرام الذهب</b> بعملة كل دولة وحسب العيار (24 هو الأنقى، و22 و21 و18 أقل نقاءً). العمود الأول سعر اليوم، والباقي الحدود المتوقعة للغد. السعر يشمل المصنعية التي تحددها في الإعدادات.",
+"help.backtest":"هنا نختبر أمانة النموذج على الماضي: لو استخدمنا الطريقة نفسها كل يوم، كم مرة وقع السعر الفعلي داخل المجال (80%)؟ المفروض قرابة 80%.<ul><li><b>اختبار التغطية:</b> يحسب النسبة ويقترح تصحيحاً إن ابتعدت كثيراً.</li><li><b>اختبار Christoffersen:</b> يتحقق أن الأخطاء لا تأتي متتالية (متكتلة)، فتكتلها يعني أن النموذج يتأخر عن تغيّر السوق.</li></ul>النقاط الحمراء على الرسم هي الأيام التي خرج فيها السعر عن المجال.",
+"help.fvModel":"المعادلة تقول: القيمة العادلة = ثابت + أثر الفائدة الحقيقية + أثر الدولار + أثر مشتريات البنوك المركزية + أثر المخاطر. المعاملات β تحدد قوة كل أثر وإشارته (الإشارة السالبة تعني أن ارتفاع العامل يخفض الذهب). القيم الأولية أمثلة؛ استبدلها بقيمك أو اضغط «تطبيق» من شاشة الدراسات الإحصائية.",
+"help.fvRes":"<b>نسبة العدالة = السعر السوقي ÷ القيمة العادلة.</b> أكبر من 1.15: السعر مبالغ فيه. بين 0.85 و1.15: عادل. أقل من 0.85: أقل من قيمته. النسبة تقول إن كان السعر بعيداً عن المنطق الاقتصادي، ولا تقول متى سيعود.",
+"help.hist":"الزر يجلب أسعار الذهب والصرف ومؤشر الدولار والتقلب والفائدة الحقيقية لسنوات من مصادر مجانية، ويدمجها مع بياناتك دون حذف شيء. كلما زادت البيانات صارت التقديرات الإحصائية أدق. إذا فشل مصدر يجرّب التطبيق الذي يليه.",
+"help.manual":"إذا تعذر الجلب الآلي اكتب السعر وسعري الصرف بنفسك واضغط «تطبيق»: يُستخدم فوراً كسعر حالي في كل الشاشات. مناسب للطوارئ أو للتجربة.",
+"help.rowform":"أضف يوماً واحداً يدوياً (التاريخ والسعر على الأقل). الحقول الاختيارية (العائد الحقيقي، الدولار، VIX) تُستخدم في شاشتي الدراسات والتقييم العادل.",
+"help.table":"كل صف هو يوم تداول. عمود «العائد اليومي» هو نسبة تغيّر السعر عن اليوم السابق (أخضر صعود وأحمر هبوط). تُعرض أحدث 250 صفاً، والبيانات كلها مخزنة على جهازك.",
+"help.params":"<ul><li><b>lambda:</b> سرعة استجابة التقلب للأخبار الجديدة (0.94 معيار شائع؛ الأقل أسرع).</li><li><b>nu:</b> سُمك الذيول: الأقل يعني توقع حركات حادة أكثر (قلّله إلى 3 في الأزمات).</li><li><b>مضاعف sigma:</b> يكبّر أو يصغّر النطاقات؛ يقترحه اختبار التغطية.</li><li><b>نموذج التقلب:</b> EWMA بسيط وسريع، وGARCH أدق مع بيانات طويلة (250 يوماً فأكثر).</li></ul>",
+"help.live":"اختر كل كم دقيقة يجلب البرنامج السعر تلقائياً. الشارة أعلى الشاشة تعرض آخر تحديث والعدّاد. الخيار الثاني يحفظ سعر اليوم كصف جديد ليبقى النموذج محدّثاً.",
+"help.rs.dist":"كل عمود يعدّ الأيام حسب نسبة تغيّر السعر فيها. المنحنى المنقّط هو الشكل لو كانت الحركة «طبيعية»، والأزرق أقرب للواقع (ذيول أثقل). إذا علت الأعمدة عند الأطراف فوق المنقّط فالأيام الحادة أكثر مما يتوقعه النموذج البسيط. <b>VaR</b> هو أسوأ خسارة يومية متوقعة بثقة 95% أو 99%، و<b>CVaR</b> متوسط الخسارة في الأيام الأسوأ من ذلك، و<b>أقصى تراجع</b> أكبر هبوط من قمة إلى قاع.",
+"help.rs.tests":"اختبارات تصف طبيعة الحركة:<ul><li><b>ADF:</b> هل السعر «يعود» لمستوى ثابت أم يتجوّل بحرية؟ (غير مستقر = يتجوّل)</li><li><b>Ljung–Box:</b> هل حركة اليوم تتأثر بالأيام السابقة؟ وعلى مربعات العوائد يكشف تجمّع التقلب.</li><li><b>نسبة التباين وهيرست:</b> هل تميل الحركة لاستمرار الاتجاه أم للارتداد؟</li></ul>العلامة ✓ تعني نتيجة «عادية»، والنقطة ● تعني ملاحظة تستحق الانتباه وليست خطأً.",
+"help.rs.vol":"التقلب هو حجم حركة السعر. EWMA وGARCH طريقتان لتقديره من الأيام الأخيرة. <b>الاستمرارية</b> القريبة من 1 تعني أن الهدوء أو الاضطراب يدوم طويلاً، و<b>نصف العمر</b> هو عدد الأيام ليتلاشى نصف أثر أي صدمة. الرسم يوضح كيف يعود التقلب تدريجياً إلى مستواه الطويل (الخط الأزرق). «موقع التقلب الحالي» هو نسبة الأيام التاريخية التي كان تقلبها أقل من اليوم.",
+"help.rs.fan":"المخروط يريك اتساع الاحتمالات مع الأيام القادمة: كلما ابتعدنا زاد الغموض فاتسع المخروط. الخط الداكن هو الوسيط، والمنطقة الأغمق تحوي 80% من السيناريوهات والأفتح 90%. اختر الأفق (من 5 أيام إلى 63 يوماً). السيناريوهات تُسحب من أيام فعلية من تاريخ الذهب، فتحافظ على طبيعته الحقيقية.",
+"help.rs.reg":"نحاول تفسير سعر الذهب بالفائدة الحقيقية ومؤشر الدولار وVIX (مؤشر الخوف).<ul><li><b>β:</b> قوة أثر العامل. <b>t وp:</b> هل الأثر حقيقي؟ (p أقل من 0.05 يعني غالباً نعم).</li><li><b>R²:</b> نسبة ما فسّره النموذج (1 = كل شيء).</li><li><b>العلاقة الزائفة:</b> قد تبدو علاقة قوية بين سلسلتين تتجوّلان بحرية وهي مصادفة. لذلك نعرض انحدار التغيّرات أيضاً، واختبار Engle–Granger يقول إن كانت علاقة المستويات حقيقية.</li></ul>",
+"help.rs.corr":"الارتباط رقم بين -1 و+1: قريب من +1 يعني أن الشيئين يتحركان معاً، وقريب من -1 يعني عكس بعضهما، وقريب من 0 لا علاقة. المصفوفة تقارن الذهب بالدولار والفائدة الحقيقية وVIX. الرسم يوضح كيف تتغير العلاقة عبر الزمن (نافذة 60 يوماً)؛ فالعلاقة ليست ثابتة.",
+"help.rs.comp":"مؤشر واحد بين -1 و+1 يجمع عدة نظرات: الاتجاه العام، والزخم، وRSI (هل ارتفع السعر بسرعة؟)، والبعد عن المتوسط، ومستوى التقلب، والتقييم العادل. لكل عامل وزن ودرجة. فوق +0.25 إيجابي، وتحت -0.25 سلبي، وغير ذلك محايد. هو ملخص إحصائي وليس نصيحة.",
+"help.rs.bt":"نختبر الطريقتين على الماضي دون «غش»: كل يوم نستخدم ما كان معروفاً حتى اليوم السابق فقط. الأقرب إلى 80% و90% هو الأمين أكثر. فرق صغير بين الطريقتين يعني أن الأبسط يكفي."
 },
 en: {
-"app.title":"GoldQuant — Gold Valuation & Daily Forecast","app.short":"Gold Valuation","app.sub":"Saudi Arabia · Egypt · Global — Model 2.0 · Last calibrated 2026-11-26",
+"app.title":"GoldQuant — Gold Valuation & Daily Forecast","app.short":"Gold Valuation","app.sub":"Saudi Arabia · Egypt · Global — Last calibrated 2026-11-26",
 "btn.refresh":"⟳ Refresh now",
 "tab.dashboard":"Home","tab.forecast":"Forecast","tab.fair":"Fair Value","tab.research":"Statistical Lab","tab.data":"Data","tab.settings":"Settings",
 "mk.title":"Choose markets","mk.hint":"Select several markets at once (at least one).","mk.SA":"Saudi Arabia","mk.EG":"Egypt","mk.GL":"Global","mk.min":"Keep at least one market selected",
@@ -406,7 +489,45 @@ en: {
 "rs.comp":"Composite statistical reading","rs.comp.sub":"Combines trend, momentum, RSI, deviation from the mean, volatility rank and fair value into one index between -1 and +1.","rs.pos":"Positive","rs.neg":"Negative","rs.neu":"Neutral","rs.factor":"Factor","rs.value":"Value","rs.weight":"Weight","rs.score":"Score","rs.c.trend":"Trend: price vs 200-day mean","rs.c.mom3":"3-month momentum","rs.c.mom12":"12-month momentum","rs.c.rsi":"RSI (14)","rs.c.z":"Price deviation from 200-day mean (z)","rs.c.vol":"Volatility rank (risk)","rs.c.val":"Fair value (fairness ratio)",
 "rs.bt":"Model comparison backtest (walk-forward)","rs.bt.sub":"GARCH re-estimated every 63 days with no look-ahead, band coverage compared against EWMA.","rs.cov80":"P10–P90 coverage (target 80%)","rs.cov90":"P5–P95 coverage (target 90%)","rs.btBest":"Closest to the 80% coverage target: {m}.",
 "rs.summary":"Interpretive summary",
-"in.fat":"Returns are not normal with excess kurtosis {k}: tails are fat, so Student-t in the simulation is justified.","in.normal":"Normality of returns is not rejected in this sample.","in.nonstat":"Log price is non-stationary (unit root): any levels regression needs a cointegration test.","in.arch":"Squared returns are autocorrelated: volatility clustering exists, so GARCH fits better than constant volatility.","in.trend":"Hurst {h}: tendency for trends to persist.","in.mr":"Hurst {h}: tendency to revert to the mean.","in.rw":"Hurst {h}: close to a random walk — no clear directional edge.","in.vrMom":"Variance ratio significantly above 1: short-term momentum.","in.vrMr":"Variance ratio significantly below 1: short-term reversion.","in.persist":"Volatility persistence {p} and shock half-life {h} days: shocks last long.","in.hiVol":"Current volatility is in the historically high range: widen safety margins.","in.loVol":"Current volatility is historically low: a sudden rise is possible (mean reversion).","in.midVol":"Current volatility is typical.","in.asym":"GJR shows an asymmetric effect: falls raise volatility more than rises.","in.coint":"Engle–Granger supports cointegration: levels coefficients are usable as a fair value.","in.spur":"Cointegration not established: treat the levels regression with caution; the relationship may be spurious."
+"in.fat":"Returns are not normal with excess kurtosis {k}: tails are fat, so Student-t in the simulation is justified.","in.normal":"Normality of returns is not rejected in this sample.","in.nonstat":"Log price is non-stationary (unit root): any levels regression needs a cointegration test.","in.arch":"Squared returns are autocorrelated: volatility clustering exists, so GARCH fits better than constant volatility.","in.trend":"Hurst {h}: tendency for trends to persist.","in.mr":"Hurst {h}: tendency to revert to the mean.","in.rw":"Hurst {h}: close to a random walk — no clear directional edge.","in.vrMom":"Variance ratio significantly above 1: short-term momentum.","in.vrMr":"Variance ratio significantly below 1: short-term reversion.","in.persist":"Volatility persistence {p} and shock half-life {h} days: shocks last long.","in.hiVol":"Current volatility is in the historically high range: widen safety margins.","in.loVol":"Current volatility is historically low: a sudden rise is possible (mean reversion).","in.midVol":"Current volatility is typical.","in.asym":"GJR shows an asymmetric effect: falls raise volatility more than rises.","in.coint":"Engle–Granger supports cointegration: levels coefficients are usable as a fair value.","in.spur":"Cointegration not established: treat the levels regression with caution; the relationship may be spurious.",
+"help.what":"Explain this",
+"help.toggle":"Show/hide guides",
+"help.badge":"Live price status: green = fresh, yellow = stale, red = connection failed. The timer shows the next update.",
+"upd.msg":"A new version of the app is available ({v}).",
+"upd.btn":"Update now",
+"ver.info":"Version {v}",
+"help.tab.dashboard":"<b>Purpose:</b> a quick look at the gold price right now, and whether it is high or reasonable.<ul><li>Pick one or more countries with the buttons above.</li><li>The cards show the price per gram in each country's currency, and the global ounce price in dollars.</li><li>The chart shows how the price moved over the period you choose.</li><li>The signal card sums up: buy, hold or sell, with the reasons.</li></ul>",
+"help.tab.forecast":"<b>Purpose:</b> estimate the range the price may move in tomorrow. Nobody knows the exact price, so we show a <b>range</b> instead of one number. Press “Update simulation” to recompute after changing any setting.",
+"help.tab.fair":"<b>Purpose:</b> is the current price higher or lower than economic conditions justify (real interest rates, dollar strength, risk)? The model computes a “fair value” and compares it with the price. Default coefficients are examples only; replace them with yours or estimate them in the Statistical Lab.",
+"help.tab.research":"<b>Purpose:</b> a lab that studies historical gold data to learn how it behaves: calm or volatile? Does it tend to keep going or snap back? Its results improve the ranges in the Forecast tab. You do not need to understand the equations: read the <b>result</b> wording and the interpretive summary at the bottom.",
+"help.tab.data":"<b>Purpose:</b> your data store; every calculation is built on the rows here. You can download years of data automatically, add a day by hand, or import a CSV file. Data stays on your device only.",
+"help.tab.settings":"<b>Purpose:</b> set the making charge, the volatility method and the auto-refresh interval. If unsure, keep the defaults; they suit most cases.",
+"help.markets":"Tap a country to show or hide its prices; you can select more than one. The code beside each country is its currency: Saudi riyal (SAR), Egyptian pound (EGP) and dollar (USD) for the global price. At least one must stay selected.",
+"help.priceChart":"The line is the gold ounce price in dollars, day by day; a rising line means a rising price. Choose the period with the buttons (30 days, 90 days, 1 year, All). Hover or touch the line to see any day's price. Long periods show the overall trend, short ones show daily wiggles.",
+"help.signal":"A simple signal that combines several clues:<ul><li>Is the price <b>above or below its fair value</b>?</li><li>Did today's price leave yesterday's expected range? That can mean an overshoot up or down.</li><li>Your manual bias (mu), if you set one.</li></ul>Each reason adds or removes a point: +1 or more = buy, −1 or less = sell, in between = hold. <b>This is a statistical reading, not investment advice.</b>",
+"help.mini":"<b>Daily volatility:</b> how much the price usually moves in a day (0.8% means a typical move of that size). <b>80% band:</b> the range where we expect tomorrow's price to land 8 times out of 10. <b>Stored data:</b> how many days feed the calculations; more days give firmer estimates.",
+"help.bands":"The table lists tomorrow's scenarios from lowest to highest. <b>P50</b> is the middle (half the scenarios above, half below). <b>P10 and P90</b> enclose 80% of cases, <b>P5 and P95</b> enclose 90%. Example: if P95 is 4,400, the price exceeded that in only 5 of every 100 scenarios.",
+"help.probs":"Probabilities from the simulation: that the price exceeds the upper bound (P90), breaks the lower bound (P10), closes above today's price, or exceeds a price you type in the box above. The small numbers underneath compare with what actually happened in the past after you run the “Coverage test”.",
+"help.box":"The wide light box = where the price lands 90% of the time, the narrower dark box = 80%, the dark line = median, the black diamond = current price. If the diamond sits near the middle of the boxes, the price is within expectations. Wider boxes mean more uncertainty.",
+"help.dist":"Each bar counts how many of the thousands of scenarios ended at a given price. A bell shape means prices near the middle are more likely, and far ends are less likely but possible.",
+"help.local":"Converts the global price into the <b>price per gram</b> in each country's currency and by karat (24 is the purest; 22, 21 and 18 are less pure). The first column is today's price and the others are tomorrow's expected bounds. The price includes the making charge you set in Settings.",
+"help.backtest":"Here we test the model's honesty on the past: if we used the same method every day, how often did the actual price land inside the range (80%)? It should be about 80%.<ul><li><b>Coverage test:</b> computes the rate and suggests a fix if it is far off.</li><li><b>Christoffersen test:</b> checks that misses do not come in streaks (clusters); clustering means the model lags behind market changes.</li></ul>Red dots on the chart are days when the price left the range.",
+"help.fvModel":"The equation reads: fair value = constant + real-yield effect + dollar effect + central-bank-buying effect + risk effect. The β coefficients set each effect's strength and sign (a negative sign means a rise in that factor lowers gold). Starting values are examples; replace them with yours or press “Apply” in the Statistical Lab.",
+"help.fvRes":"<b>Fairness ratio = market price ÷ fair value.</b> Above 1.15: overvalued. Between 0.85 and 1.15: fair. Below 0.85: undervalued. The ratio says whether the price is far from economic logic; it does not say when it will return.",
+"help.hist":"The button fetches gold, FX, dollar index, volatility and real-yield history for years from free sources and merges it with your data without deleting anything. More data makes statistical estimates sharper. If one source fails, the app tries the next.",
+"help.manual":"If automatic fetching fails, type the price and both FX rates yourself and press “Apply”: it is used immediately as the current price on every screen. Good for emergencies or testing.",
+"help.rowform":"Add a single day by hand (date and price at least). The optional fields (real yield, dollar index, VIX) are used by the Statistical Lab and Fair Value screens.",
+"help.table":"Each row is a trading day. The “Daily return” column is the price change versus the previous day (green up, red down). The latest 250 rows are shown; all data is stored on your device.",
+"help.params":"<ul><li><b>lambda:</b> how fast volatility reacts to new moves (0.94 is a common standard; lower is faster).</li><li><b>nu:</b> tail thickness: lower expects more violent moves (set 3 in crises).</li><li><b>Sigma multiplier:</b> widens or narrows the ranges; the coverage test suggests it.</li><li><b>Volatility model:</b> EWMA is simple and fast, GARCH is sharper with long history (250+ days).</li></ul>",
+"help.live":"Choose how often the app fetches the price automatically. The badge at the top shows the last update and the timer. The second option saves today's price as a new row so the model stays current.",
+"help.rs.dist":"Each bar counts the days by their percentage price change. The dotted curve is the shape if moves were “normal”; the blue one is closer to reality (heavier tails). If the bars at the ends rise above the dotted curve, sharp days are more common than the simple model expects. <b>VaR</b> is the worst expected daily loss at 95% or 99% confidence, <b>CVaR</b> is the average loss on days worse than that, and <b>max drawdown</b> is the biggest fall from a peak to a trough.",
+"help.rs.tests":"Tests that describe how the price behaves:<ul><li><b>ADF:</b> does the price “return” to a fixed level or wander freely? (non-stationary = wanders)</li><li><b>Ljung–Box:</b> is today's move influenced by previous days? On squared returns it reveals volatility clustering.</li><li><b>Variance ratio and Hurst:</b> do moves tend to continue or to snap back?</li></ul>A ✓ means a “normal” result; a ● means a note worth attention, not an error.",
+"help.rs.vol":"Volatility is how much the price moves. EWMA and GARCH are two ways to estimate it from recent days. <b>Persistence</b> near 1 means calm or turbulence lasts long, and <b>half-life</b> is the number of days for half of any shock's effect to fade. The chart shows volatility gradually returning to its long-run level (blue line). “Current volatility rank” is the share of historical days with lower volatility than today.",
+"help.rs.fan":"The fan shows how the possibilities widen over the coming days: the further out, the more uncertainty, so the fan widens. The dark line is the median, the darker area holds 80% of scenarios and the lighter one 90%. Pick the horizon (5 to 63 days). Scenarios are drawn from real days in gold's history, so they keep its true character.",
+"help.rs.reg":"We try to explain the gold price with real yield, the dollar index and VIX (the fear index).<ul><li><b>β:</b> the factor's effect size. <b>t and p:</b> is the effect real? (p below 0.05 usually means yes).</li><li><b>R²:</b> the share explained by the model (1 = everything).</li><li><b>Spurious relationships:</b> two series that wander freely can look strongly related by coincidence. That is why we also show the changes regression, and the Engle–Granger test says whether the levels relationship is real.</li></ul>",
+"help.rs.corr":"Correlation is a number between -1 and +1: near +1 means two things move together, near -1 means opposite, near 0 means unrelated. The matrix compares gold with the dollar, real yield and VIX. The chart shows how the relationship changes over time (60-day window); it is not constant.",
+"help.rs.comp":"One index between -1 and +1 that combines several views: overall trend, momentum, RSI (did the price rise too fast?), distance from the average, volatility level and fair value. Each factor has a weight and a score. Above +0.25 is positive, below -0.25 is negative, otherwise neutral. It is a statistical summary, not advice.",
+"help.rs.bt":"We test both methods on the past without “cheating”: each day uses only what was known up to the previous day. The one closer to 80% and 90% is more honest. A small gap between the two means the simpler one is enough."
 }
 };
 
@@ -554,8 +675,9 @@ const rollingCorr = (a, b, w) => { const out = []; for (let i = w; i <= a.length
 const histVaR = (r, q) => { const v = quantileOf(r, q); const tail = r.filter(x => x <= v); return { var: -v, cvar: -mean(tail) }; };
 
 // ===================== الثوابت =====================
+const APP_VERSION = "2.1.0-f07f2ffd"; // يُستبدل عند البناء (build.py)
 const OUNCE_TO_GRAM = 31.1035;
-const STORAGE_KEY = "gold_model_data", SETTINGS_KEY = "gold_model_settings", LIVE_KEY = "gold_last_live", THEME_KEY = "gold_theme", LANG_KEY = "gold_lang", HISTTRY_KEY = "gold_hist_try";
+const STORAGE_KEY = "gold_model_data", SETTINGS_KEY = "gold_model_settings", LIVE_KEY = "gold_last_live", THEME_KEY = "gold_theme", LANG_KEY = "gold_lang", HISTTRY_KEY = "gold_hist_try", HELP_KEY = "gold_help", HELPSTATE_KEY = "gold_help_state";
 const DEFAULT_SIGMA = 0.012, BASE_MU = 0.0002, SAR_PEG = 3.75;
 const CORS_PROXIES = [
   (u) => "https://api.cors.lol/?url=" + encodeURIComponent(u),
@@ -599,11 +721,33 @@ const applyStaticI18n = () => {
   document.querySelectorAll("[data-i18n]").forEach(el => { el.textContent = t(el.dataset.i18n); });
   document.querySelectorAll("[data-i18n-tip]").forEach(el => { el.dataset.tip = t(el.dataset.i18nTip); });
   document.querySelectorAll("[data-i18n-ph]").forEach(el => { el.placeholder = t(el.dataset.i18nPh); });
+  document.querySelectorAll("[data-i18n-title]").forEach(el => { el.title = t(el.dataset.i18nTitle); });
+  $("liveBadge").title = t("help.badge"); $("verInfo").textContent = t("ver.info", { v: APP_VERSION });
+  if (state.newVersion) $("updateMsg").textContent = t("upd.msg", { v: state.newVersion });
+  applyHelp();
   document.title = "GoldQuant — " + t("app.short");
   $("btnLang").textContent = state.lang === "ar" ? "EN" : "ع";
   $("methList").innerHTML = ["m1", "m2", "m3", "m4", "m5", "m6", "m7", "m8"].map(k => `<li>${t("meth." + k)}</li>`).join("");
 };
 const isRTL = () => state.lang === "ar";
+// الإرشادات: صندوق شرح قابل للطي لكل شاشة/رسم (يُحفظ فتحه وإغلاقه)
+state.helpOn = lsGet(HELP_KEY) !== "0";
+state.helpState = (() => { try { return JSON.parse(lsGet(HELPSTATE_KEY) || "{}"); } catch (e) { return {}; } })();
+const helpHtml = (key) => { const open = state.helpState[key] !== undefined ? state.helpState[key] : key.startsWith("help.tab."); return `<details class="help" data-k="${key}"${open ? " open" : ""}><summary>ⓘ ${t("help.what")}</summary><div class="help-body">${t(key)}</div></details>`; };
+const applyHelp = () => {
+  document.querySelectorAll("[data-help]").forEach(el => { el.innerHTML = helpHtml(el.dataset.help); });
+  document.documentElement.classList.toggle("nohelp", !state.helpOn);
+  const b = $("btnHelp"); if (b) b.setAttribute("aria-pressed", String(state.helpOn));
+};
+// التحقق من وجود إصدار أحدث على الخادم (يعمل عند الاستضافة فقط، ويُتجاهل على file://)
+const checkUpdate = async () => {
+  if (location.protocol === "file:" || state.newVersion) return;
+  try {
+    const r = await fetch("version.json?_=" + Date.now(), { cache: "no-store" }); if (!r.ok) return;
+    const j = await r.json();
+    if (j && j.version && j.version !== APP_VERSION) { state.newVersion = j.version; $("updateMsg").textContent = t("upd.msg", { v: j.version }); $("updateBar").classList.remove("hidden"); }
+  } catch (e) { /* بلا اتصال: نتجاهل */ }
+};
 // رسائل حالة تُعاد ترجمتها عند تبديل اللغة: parts = [[مفتاح, متغيرات], ...]
 state.msgs = {};
 const setMsg = (id, parts, spin = false) => { state.msgs[id] = { parts, spin }; renderMsg(id); };
@@ -1036,6 +1180,7 @@ const renderDashboard = () => {
   const sig = tradingSignal(), fair = currentFair();
   $("signalCard").innerHTML = `
     <div class="text-sm muted">${t("sg.title")}</div>
+    ${helpHtml("help.signal")}
     <div class="flex items-center gap-3 mt-2">
       <div class="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl" style="background:color-mix(in srgb, ${sig.color} 14%, transparent);color:${sig.color}">${sig.icon}</div>
       <div><div class="text-3xl font-bold" style="color:${sig.color}">${sig.label}</div><div class="text-xs faint num">${sig.en} · score ${sig.score > 0 ? "+" : ""}${sig.score}</div></div>
@@ -1200,6 +1345,9 @@ const setTheme = (dark) => { document.documentElement.classList.toggle("dark", d
 const bind = () => {
   document.querySelectorAll(".tab-btn").forEach(b => b.addEventListener("click", () => switchTab(b.dataset.tab)));
   $("btnTheme").addEventListener("click", () => setTheme(!document.documentElement.classList.contains("dark")));
+  $("btnHelp").addEventListener("click", () => { state.helpOn = !state.helpOn; lsSet(HELP_KEY, state.helpOn ? "1" : "0"); applyHelp(); });
+  document.addEventListener("toggle", (e) => { const d = e.target; if (d && d.matches && d.matches("details.help")) { state.helpState[d.dataset.k] = d.open; lsSet(HELPSTATE_KEY, JSON.stringify(state.helpState)); } }, true);
+  $("btnUpdate").addEventListener("click", () => { location.replace(location.pathname + "?v=" + encodeURIComponent(state.newVersion || Date.now())); });
   $("btnLang").addEventListener("click", () => setLang(state.lang === "ar" ? "en" : "ar"));
   const doFetch = () => { retryCount = 0; fetchLiveNow(); };
   $("btnFetchHeader").addEventListener("click", doFetch); $("btnFetchNow").addEventListener("click", doFetch);
@@ -1242,7 +1390,8 @@ const init = () => {
   const tab = lsGet("gold_tab"); if (tab && document.getElementById("tab-" + tab)) switchTab(tab);
   const live = loadLive(); if (live && live.fetchedAt) state.lastOk = new Date(live.fetchedAt).getTime();
   scheduleNext(1500); setInterval(tick, 1000);
-  document.addEventListener("visibilitychange", () => { if (!document.hidden && state.nextAt && Date.now() >= state.nextAt) tick(); });
+  checkUpdate(); setInterval(checkUpdate, 10 * 60 * 1000);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) { checkUpdate(); if (state.nextAt && Date.now() >= state.nextAt) tick(); } });
   // تنزيل تاريخي تلقائي إن كانت البيانات قليلة (مرة كل 6 ساعات كحد أقصى)
   if (state.settings.autoHist && loadData().length < 250 && Date.now() - (+lsGet(HISTTRY_KEY) || 0) > 6 * 3600 * 1000) setTimeout(() => downloadHistory("5y", { silent: true }), 800);
 };
@@ -1328,14 +1477,14 @@ const renderResearch = () => {
   const R = computeResearch(rows);
   if (R.insufficient) { root.innerHTML = `<div class="card p-5"><h2 class="font-bold mb-2">${t("rs.title")}</h2><p class="muted text-sm mb-3">${t("rs.need", { n: R.n })}</p><button class="btn btn-primary" id="rsDl">${t("b.dl")}</button></div>`; $("rsDl").addEventListener("click", () => { switchTab("data"); downloadHistory($("histRange").value); }); return; }
   const d = R.dist, T = R.tests, g = R.g, gj = R.gj, ann = Math.sqrt(252), S0 = state.S0 || +rows[rows.length - 1].gold, mu = state.settings.mu;
-  const sec = (title, body, sub) => `<div class="card p-4"><h2 class="font-bold mb-1">${title}</h2>${sub ? `<p class="text-xs faint mb-3">${sub}</p>` : '<div class="mb-2"></div>'}${body}</div>`;
+  const sec = (title, body, sub, hk) => `<div class="card p-4"><h2 class="font-bold mb-1">${title}</h2>${sub ? `<p class="text-xs faint mb-1">${sub}</p>` : ""}${hk ? helpHtml(hk) : '<div class="mb-2"></div>'}${body}</div>`;
   const parts = [];
   // رأس
   parts.push(`<div class="card p-4"><div class="flex flex-wrap items-center justify-between gap-2"><div><h2 class="font-bold">${t("rs.title")}</h2><p class="text-xs faint">${t("rs.sub", { n: R.n, a: R.from, b: R.to, ms: R.ms.toFixed(0) })}</p></div><button class="btn" id="rsRecalc">${t("rs.recalc")}</button></div>${R.n < 250 ? `<p class="banner banner-warn mt-3 text-sm">${t("rs.few")}</p>` : ""}</div>`);
   // 1) التوزيع
   const eq = (c) => c ? "var(--bad)" : "var(--good)";
   parts.push(sec(t("rs.dist"), `<div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">${statBox(t("rs.meanAnn"), pct(d.meanAnn, 1), t("rs.logRet"))}${statBox(t("rs.volAnn"), pct(d.volAnn, 1), "σ·√252")}${statBox(t("rs.skew"), d.skew.toFixed(2), d.skew < -0.2 ? t("rs.negSkew") : d.skew > 0.2 ? t("rs.posSkew") : t("rs.symm"))}${statBox(t("rs.kurt"), d.kurt.toFixed(2), d.kurt > 1 ? t("rs.fat") : t("rs.thin"))}
-    ${statBox("VaR 95% (1d)", pct(d.var95.var, 2), `CVaR ${pct(d.var95.cvar, 2)}`)}${statBox("VaR 99% (1d)", pct(d.var99.var, 2), `CVaR ${pct(d.var99.cvar, 2)}`)}${statBox(t("rs.mdd"), pct(d.mdd, 1), t("rs.mddSub"))}${statBox("JB p-value", pv(d.jb.p), d.jb.p < 0.05 ? t("rs.notNormal") : t("rs.normalOk"))}</div><div class="chart-box" style="height:240px"><canvas id="chartRetHist"></canvas></div>`, t("rs.dist.sub")));
+    ${statBox("VaR 95% (1d)", pct(d.var95.var, 2), `CVaR ${pct(d.var95.cvar, 2)}`)}${statBox("VaR 99% (1d)", pct(d.var99.var, 2), `CVaR ${pct(d.var99.cvar, 2)}`)}${statBox(t("rs.mdd"), pct(d.mdd, 1), t("rs.mddSub"))}${statBox("JB p-value", pv(d.jb.p), d.jb.p < 0.05 ? t("rs.notNormal") : t("rs.normalOk"))}</div><div class="chart-box" style="height:240px"><canvas id="chartRetHist"></canvas></div>`, t("rs.dist.sub"), "help.rs.dist"));
   // 2) اختبارات
   const rowT = (name, stat, p, vd) => `<tr><td>${name}</td><td><span class="num">${stat}</span></td><td><span class="num">${p}</span></td><td>${vd}</td></tr>`;
   const trs = [];
@@ -1346,34 +1495,34 @@ const renderResearch = () => {
   if (T.vr5) trs.push(rowT("VR(5)", T.vr5.VR.toFixed(3), pv(T.vr5.p), verdict(T.vr5.p > 0.05, t("rs.rw"), T.vr5.VR > 1 ? t("rs.mom") : t("rs.mr"))));
   if (T.vr20) trs.push(rowT("VR(20)", T.vr20.VR.toFixed(3), pv(T.vr20.p), verdict(T.vr20.p > 0.05, t("rs.rw"), T.vr20.VR > 1 ? t("rs.mom") : t("rs.mr"))));
   if (T.hurst !== null) trs.push(rowT(t("rs.hurst"), T.hurst.toFixed(3), "≈0.55 iid", verdict(T.hurst > 0.42 && T.hurst < 0.62, t("rs.rw"), T.hurst >= 0.62 ? t("rs.persist") : t("rs.antiP"))));
-  parts.push(sec(t("rs.tests"), `<div class="overflow-x-auto"><table class="tbl"><thead><tr><th>${t("ch.test")}</th><th>${t("rs.stat")}</th><th>p / ${t("rs.crit")}</th><th>${t("ch.result")}</th></tr></thead><tbody>${trs.join("")}</tbody></table></div>`, t("rs.tests.sub")));
+  parts.push(sec(t("rs.tests"), `<div class="overflow-x-auto"><table class="tbl"><thead><tr><th>${t("ch.test")}</th><th>${t("rs.stat")}</th><th>p / ${t("rs.crit")}</th><th>${t("ch.result")}</th></tr></thead><tbody>${trs.join("")}</tbody></table></div>`, t("rs.tests.sub"), "help.rs.tests"));
   // 3) نماذج التقلب
   if (g) {
     const gr = (m, name) => m ? `<tr><td>${name}</td><td><span class="num">${m.alpha.toFixed(3)}</span></td><td><span class="num">${m.beta.toFixed(3)}</span></td><td><span class="num">${m.gamma ? m.gamma.toFixed(3) : "—"}</span></td><td><span class="num">${m.persistence.toFixed(3)}</span></td><td><span class="num">${isFinite(m.halfLife) ? m.halfLife.toFixed(0) : "∞"}</span></td><td><span class="num">${pct(m.sigmaNext * ann, 1)}</span></td><td><span class="num">${pct(m.longRunSigma * ann, 1)}</span></td><td><span class="num">${m.aic.toFixed(0)}</span></td></tr>` : "";
     parts.push(sec(t("rs.vol"), `<div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">${statBox("EWMA σ", pct(R.ewma * ann, 1), t("rs.ann") + " · λ=" + state.settings.lambda)}${statBox("GARCH σ", pct(g.sigmaNext * ann, 1), t("rs.ann"))}${statBox(t("rs.longRun"), pct(g.longRunSigma * ann, 1), t("rs.ann"))}${statBox(t("rs.volPct"), pct(R.volPct, 0), R.volPct > 0.8 ? t("rs.hiVol") : R.volPct < 0.3 ? t("rs.loVol") : t("rs.midVol"))}</div>
       <div class="overflow-x-auto mb-3"><table class="tbl"><thead><tr><th>${t("rs.model")}</th><th>α</th><th>β</th><th>γ</th><th>${t("rs.persistence")}</th><th>${t("rs.half")}</th><th>σ ${t("rs.next")}</th><th>${t("rs.longRun")}</th><th>AIC</th></tr></thead><tbody>${gr(g, "GARCH(1,1)")}${gr(gj, "GJR-GARCH")}</tbody></table></div>
       <div class="flex flex-wrap items-center gap-3 mb-3"><span class="text-sm muted">${t("rs.nuEst")}: <b class="num">${R.nuEst.toFixed(1)}</b></span><button class="btn" id="rsApplyNu">${t("rs.applyNu")}</button><button class="btn" id="rsUseGarch">${t("rs.useGarch")}</button></div>
-      <div class="chart-box" style="height:220px"><canvas id="chartVolTerm"></canvas></div>`, t("rs.vol.sub")));
+      <div class="chart-box" style="height:220px"><canvas id="chartVolTerm"></canvas></div>`, t("rs.vol.sub"), "help.rs.vol"));
     // 4) مخروط التنبؤ FHS
-    parts.push(sec(t("rs.fan"), `<div class="flex flex-wrap items-center gap-3 mb-3"><span class="text-sm muted">${t("rs.horizon")}</span><div class="seg" id="fanBtns">${[5, 10, 21, 63].map(h => `<button data-h="${h}" aria-pressed="${h === fanH}">${h}d</button>`).join("")}</div></div><div class="chart-box" style="height:280px"><canvas id="chartFan"></canvas></div><div class="overflow-x-auto mt-3"><table class="tbl" id="fanTable"></table></div>`, t("rs.fan.sub")));
+    parts.push(sec(t("rs.fan"), `<div class="flex flex-wrap items-center gap-3 mb-3"><span class="text-sm muted">${t("rs.horizon")}</span><div class="seg" id="fanBtns">${[5, 10, 21, 63].map(h => `<button data-h="${h}" aria-pressed="${h === fanH}">${h}d</button>`).join("")}</div></div><div class="chart-box" style="height:280px"><canvas id="chartFan"></canvas></div><div class="overflow-x-auto mt-3"><table class="tbl" id="fanTable"></table></div>`, t("rs.fan.sub"), "help.rs.fan"));
   }
   // 5) الانحدار
   const regTbl = (m, title, fmtB) => m ? `<h3 class="font-semibold text-sm mb-1">${title}</h3><div class="overflow-x-auto mb-2"><table class="tbl"><thead><tr><th>${t("rs.var")}</th><th>β</th><th>SE</th><th>t</th><th>p</th></tr></thead><tbody>${m.names.map((nm, i) => `<tr><td>${nm}</td><td><span class="num">${fmtB(m.beta[i])}</span></td><td><span class="num">${fmtB(m.se[i])}</span></td><td><span class="num">${m.tstat[i].toFixed(2)}</span></td><td><span class="num" style="color:${m.pval[i] < 0.05 ? "var(--good)" : "var(--ink-3)"}">${pv(m.pval[i])}</span></td></tr>`).join("")}</tbody></table></div><div class="text-xs muted mb-4">n=${m.n} · R²=${m.r2.toFixed(3)} · adj.R²=${m.adjR2.toFixed(3)} · DW=${m.dw.toFixed(2)} · σ<sub>ε</sub>=${fmtB(m.sigma)}</div>` : "";
   if (R.regLvl || R.regChg) {
     const eg = R.regLvl && R.regLvl.eg;
-    parts.push(sec(t("rs.reg"), `${regTbl(R.regLvl, t("rs.regLvl"), (v) => v.toFixed(Math.abs(v) < 1 ? 4 : 2))}${eg ? `<div class="banner ${eg.reject5 ? "banner-good" : "banner-warn"} mb-3 text-sm">Engle–Granger: ${t("rs.stat")} <b class="num">${eg.stat.toFixed(2)}</b> ${t("rs.vs")} <span class="num">${eg.crit5}</span> (5%, ${t("rs.approx")}) — ${eg.reject5 ? "✓ " + t("rs.coint") : "● " + t("rs.noCoint")}${!eg.reject5 || R.regLvl.dw < 0.5 ? `<br>${t("rs.spurious")}` : ""}</div>` : ""}${regTbl(R.regChg, t("rs.regChg"), (v) => v.toFixed(Math.abs(v) < 0.01 ? 5 : 4))}${R.regLvl ? `<button class="btn btn-primary" id="rsApplyReg">${t("rs.applyReg")}</button><p class="text-xs faint mt-2">${t("rs.applyNote")}</p>` : ""}`, t("rs.reg.sub", { v: R.regVars.join(", ") })));
+    parts.push(sec(t("rs.reg"), `${regTbl(R.regLvl, t("rs.regLvl"), (v) => v.toFixed(Math.abs(v) < 1 ? 4 : 2))}${eg ? `<div class="banner ${eg.reject5 ? "banner-good" : "banner-warn"} mb-3 text-sm">Engle–Granger: ${t("rs.stat")} <b class="num">${eg.stat.toFixed(2)}</b> ${t("rs.vs")} <span class="num">${eg.crit5}</span> (5%, ${t("rs.approx")}) — ${eg.reject5 ? "✓ " + t("rs.coint") : "● " + t("rs.noCoint")}${!eg.reject5 || R.regLvl.dw < 0.5 ? `<br>${t("rs.spurious")}` : ""}</div>` : ""}${regTbl(R.regChg, t("rs.regChg"), (v) => v.toFixed(Math.abs(v) < 0.01 ? 5 : 4))}${R.regLvl ? `<button class="btn btn-primary" id="rsApplyReg">${t("rs.applyReg")}</button><p class="text-xs faint mt-2">${t("rs.applyNote")}</p>` : ""}`, t("rs.reg.sub", { v: R.regVars.join(", ") }), "help.rs.reg"));
   } else parts.push(sec(t("rs.reg"), `<p class="text-sm muted">${t("rs.regNone")}</p>`));
   // 6) الارتباطات
   if (R.corr) {
-    const C = R.corr; parts.push(sec(t("rs.corr"), `<div class="overflow-x-auto"><table class="tbl"><thead><tr><th></th>${C.names.map(n => `<th>${n}</th>`).join("")}</tr></thead><tbody>${C.names.map((n, i) => `<tr><td class="font-semibold">${n}</td>${C.m[i].map(v => `<td style="background:color-mix(in srgb, ${v >= 0 ? "var(--blue)" : "var(--bad)"} ${Math.round(Math.abs(v) * 55)}%, transparent)"><span class="num">${v.toFixed(2)}</span></td>`).join("")}</tr>`).join("")}</tbody></table></div><div class="chart-box mt-3" style="height:220px"><canvas id="chartRoll"></canvas></div>`, t("rs.corr.sub")));
+    const C = R.corr; parts.push(sec(t("rs.corr"), `<div class="overflow-x-auto"><table class="tbl"><thead><tr><th></th>${C.names.map(n => `<th>${n}</th>`).join("")}</tr></thead><tbody>${C.names.map((n, i) => `<tr><td class="font-semibold">${n}</td>${C.m[i].map(v => `<td style="background:color-mix(in srgb, ${v >= 0 ? "var(--blue)" : "var(--bad)"} ${Math.round(Math.abs(v) * 55)}%, transparent)"><span class="num">${v.toFixed(2)}</span></td>`).join("")}</tr>`).join("")}</tbody></table></div><div class="chart-box mt-3" style="height:220px"><canvas id="chartRoll"></canvas></div>`, t("rs.corr.sub"), "help.rs.corr"));
   }
   // 7) القراءة المركبة
   const tot = R.comp.total, lab = tot > 0.25 ? { l: t("rs.pos"), c: "var(--good)" } : tot < -0.25 ? { l: t("rs.neg"), c: "var(--bad)" } : { l: t("rs.neu"), c: "var(--neutral)" };
-  parts.push(sec(t("rs.comp"), `<div class="flex items-center gap-3 mb-3"><span class="pill text-lg" style="color:${lab.c}">${lab.l}</span><span class="num font-bold">${tot >= 0 ? "+" : ""}${tot.toFixed(2)}</span><span class="text-xs faint">[-1, +1]</span></div><div class="overflow-x-auto"><table class="tbl"><thead><tr><th>${t("rs.factor")}</th><th>${t("rs.value")}</th><th>${t("rs.weight")}</th><th>${t("rs.score")}</th></tr></thead><tbody>${R.comp.items.map(c => `<tr><td>${t("rs.c." + c.k)}</td><td><span class="num">${c.val}</span></td><td><span class="num">${(c.w * 100).toFixed(0)}%</span></td><td><span class="num" style="color:${c.sc > 0.05 ? "var(--good)" : c.sc < -0.05 ? "var(--bad)" : "var(--ink-3)"}">${c.sc >= 0 ? "+" : ""}${c.sc.toFixed(2)}</span></td></tr>`).join("")}</tbody></table></div><p class="text-xs faint mt-2">${t("sg.disc")}</p>`, t("rs.comp.sub")));
+  parts.push(sec(t("rs.comp"), `<div class="flex items-center gap-3 mb-3"><span class="pill text-lg" style="color:${lab.c}">${lab.l}</span><span class="num font-bold">${tot >= 0 ? "+" : ""}${tot.toFixed(2)}</span><span class="text-xs faint">[-1, +1]</span></div><div class="overflow-x-auto"><table class="tbl"><thead><tr><th>${t("rs.factor")}</th><th>${t("rs.value")}</th><th>${t("rs.weight")}</th><th>${t("rs.score")}</th></tr></thead><tbody>${R.comp.items.map(c => `<tr><td>${t("rs.c." + c.k)}</td><td><span class="num">${c.val}</span></td><td><span class="num">${(c.w * 100).toFixed(0)}%</span></td><td><span class="num" style="color:${c.sc > 0.05 ? "var(--good)" : c.sc < -0.05 ? "var(--bad)" : "var(--ink-3)"}">${c.sc >= 0 ? "+" : ""}${c.sc.toFixed(2)}</span></td></tr>`).join("")}</tbody></table></div><p class="text-xs faint mt-2">${t("sg.disc")}</p>`, t("rs.comp.sub"), "help.rs.comp"));
   // 8) مقارنة رجعية
   if (R.bt) {
     const b = R.bt, better = Math.abs(b.garch.cov80 - 0.8) < Math.abs(b.ewma.cov80 - 0.8) ? "GARCH" : "EWMA";
-    parts.push(sec(t("rs.bt"), `<div class="overflow-x-auto"><table class="tbl"><thead><tr><th>${t("rs.model")}</th><th>${t("rs.cov80")}</th><th>${t("rs.cov90")}</th><th>n</th></tr></thead><tbody>${["ewma", "garch"].map(k => `<tr><td>${k === "ewma" ? "EWMA" : "GARCH(1,1)"}</td><td><span class="num">${pct(b[k].cov80, 1)}</span> <span class="faint text-xs">(Δ ${((b[k].cov80 - 0.8) * 100).toFixed(1)}pp)</span></td><td><span class="num">${pct(b[k].cov90, 1)}</span> <span class="faint text-xs">(Δ ${((b[k].cov90 - 0.9) * 100).toFixed(1)}pp)</span></td><td><span class="num">${b[k].n}</span></td></tr>`).join("")}</tbody></table></div><p class="text-sm mt-2">${t("rs.btBest", { m: better })}</p>`, t("rs.bt.sub")));
+    parts.push(sec(t("rs.bt"), `<div class="overflow-x-auto"><table class="tbl"><thead><tr><th>${t("rs.model")}</th><th>${t("rs.cov80")}</th><th>${t("rs.cov90")}</th><th>n</th></tr></thead><tbody>${["ewma", "garch"].map(k => `<tr><td>${k === "ewma" ? "EWMA" : "GARCH(1,1)"}</td><td><span class="num">${pct(b[k].cov80, 1)}</span> <span class="faint text-xs">(Δ ${((b[k].cov80 - 0.8) * 100).toFixed(1)}pp)</span></td><td><span class="num">${pct(b[k].cov90, 1)}</span> <span class="faint text-xs">(Δ ${((b[k].cov90 - 0.9) * 100).toFixed(1)}pp)</span></td><td><span class="num">${b[k].n}</span></td></tr>`).join("")}</tbody></table></div><p class="text-sm mt-2">${t("rs.btBest", { m: better })}</p>`, t("rs.bt.sub"), "help.rs.bt"));
   }
   // 9) خلاصة تفسيرية
   const I = [];

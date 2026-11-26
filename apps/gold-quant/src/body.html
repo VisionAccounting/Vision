@@ -1,0 +1,247 @@
+<body class="min-h-screen">
+<header class="hdr">
+  <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+    <div class="flex items-center gap-3">
+      <div class="logo">Au</div>
+      <div>
+        <h1 class="text-lg font-bold leading-tight" data-i18n="app.title"></h1>
+        <p class="text-xs faint" data-i18n="app.sub"></p>
+      </div>
+    </div>
+    <div class="flex items-center gap-2 flex-wrap">
+      <div class="live" id="liveBadge"><span class="dot" id="liveDot"></span><span id="liveText"></span></div>
+      <button class="btn" id="btnFetchHeader" data-i18n="btn.refresh"></button>
+      <button class="btn" id="btnHelp" aria-pressed="true" data-i18n-title="help.toggle">ⓘ</button>
+      <button class="btn" id="btnLang" aria-label="Language">EN</button>
+      <button class="btn" id="btnTheme" aria-label="Theme"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/></svg></button>
+    </div>
+  </div>
+  <div class="refbar"><div id="refreshFill"></div></div>
+  <nav class="max-w-7xl mx-auto px-4 flex overflow-x-auto" id="tabs">
+    <button class="tab-btn active" data-tab="dashboard" data-i18n="tab.dashboard"></button>
+    <button class="tab-btn" data-tab="forecast" data-i18n="tab.forecast"></button>
+    <button class="tab-btn" data-tab="fair" data-i18n="tab.fair"></button>
+    <button class="tab-btn" data-tab="research" data-i18n="tab.research"></button>
+    <button class="tab-btn" data-tab="data" data-i18n="tab.data"></button>
+    <button class="tab-btn" data-tab="settings" data-i18n="tab.settings"></button>
+  </nav>
+</header>
+
+<div id="updateBar" class="hidden banner banner-good flex flex-wrap items-center justify-between gap-2" style="border-radius:0">
+  <span id="updateMsg"></span><button class="btn btn-primary" id="btnUpdate" data-i18n="upd.btn"></button>
+</div>
+<main class="max-w-7xl mx-auto px-4 py-5 space-y-4">
+  <div id="banners" class="space-y-2"></div>
+
+  <!-- ===== الرئيسية ===== -->
+  <section id="tab-dashboard" class="tab space-y-4">
+    <div data-help="help.tab.dashboard"></div>
+    <div class="card p-4">
+      <div class="mb-3"><h2 class="font-bold" data-i18n="mk.title"></h2><p class="text-xs faint" data-i18n="mk.hint"></p></div>
+      <div data-help="help.markets"></div>
+      <div id="marketChips" class="flex flex-wrap gap-2" role="group"></div>
+    </div>
+    <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4" id="kpis"></div>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div class="card p-4 lg:col-span-2">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+          <h2 class="font-bold" data-i18n="ch.title"></h2>
+          <div class="seg" id="rangeBtns">
+            <button data-r="30" aria-pressed="false">30D</button><button data-r="90" aria-pressed="true">90D</button><button data-r="365" aria-pressed="false">1Y</button><button data-r="0" aria-pressed="false" data-i18n="ch.all"></button>
+          </div>
+        </div>
+        <div data-help="help.priceChart"></div>
+        <div class="chart-box"><canvas id="chartHistory"></canvas></div>
+        <p id="historyEmpty" class="text-sm faint hidden" data-i18n="ch.empty"></p>
+      </div>
+      <div class="card p-5 flex flex-col" id="signalCard"></div>
+    </div>
+    <div data-help="help.mini"></div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="miniStats"></div>
+  </section>
+
+  <!-- ===== التنبؤ ===== -->
+  <section id="tab-forecast" class="tab space-y-4 hidden">
+    <div data-help="help.tab.forecast"></div>
+    <div class="card p-4 flex flex-wrap items-end gap-4">
+      <div class="w-48">
+        <label class="lbl flex items-center gap-2"><span data-i18n="fc.mu"></span>
+          <span class="tip" tabindex="0" data-i18n-tip="fc.mu.tip">?</span></label>
+        <input type="number" step="0.0001" id="inMu" class="inp">
+      </div>
+      <div class="w-48"><label class="lbl" data-i18n="fc.target"></label><input type="number" step="1" id="inTarget" class="inp" placeholder="4300"></div>
+      <button class="btn btn-primary" id="btnSimulate" data-i18n="fc.sim"></button>
+      <span id="simMeta" class="text-xs faint"></span>
+    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div class="card p-4">
+        <h2 class="font-bold mb-1" data-i18n="fc.bands"></h2>
+        <p class="text-xs faint mb-3" data-i18n="fc.bands.sub"></p>
+        <div data-help="help.bands"></div>
+        <table class="tbl" id="tblGlobalBands"></table>
+        <div data-help="help.probs"></div>
+        <div class="grid grid-cols-2 gap-3 mt-4" id="probStats"></div>
+      </div>
+      <div class="card p-4">
+        <h2 class="font-bold mb-1" data-i18n="fc.box"></h2>
+        <p class="text-xs faint mb-2" data-i18n="fc.box.sub"></p>
+        <div data-help="help.box"></div>
+        <div class="chart-box" style="height:180px"><canvas id="chartBox"></canvas></div>
+        <h3 class="font-semibold text-sm mt-3 mb-1" data-i18n="fc.dist"></h3>
+        <div data-help="help.dist"></div>
+        <div class="chart-box" style="height:170px"><canvas id="chartHist"></canvas></div>
+      </div>
+    </div>
+    <div class="card p-4">
+      <h2 class="font-bold mb-1" data-i18n="fc.local"></h2>
+      <p class="text-xs faint mb-3" id="localMeta"></p>
+      <div data-help="help.local"></div>
+      <div class="overflow-x-auto"><table class="tbl" id="tblLocal"></table></div>
+    </div>
+    <div class="card p-4 space-y-3">
+      <div class="flex flex-wrap items-center gap-3">
+        <h2 class="font-bold" data-i18n="bt.title"></h2>
+        <button class="btn" id="btnCoverage" data-i18n="bt.cov"></button>
+        <button class="btn" id="btnChristoffersen" data-i18n="bt.chr"></button>
+      </div>
+      <p class="text-xs faint" data-i18n="bt.note"></p>
+      <div data-help="help.backtest"></div>
+      <div id="coverageResult"></div><div id="christResult"></div>
+      <div class="chart-box hidden" id="btChartWrap"><canvas id="chartBacktest"></canvas></div>
+    </div>
+  </section>
+
+  <!-- ===== التقييم العادل ===== -->
+  <section id="tab-fair" class="tab space-y-4 hidden">
+    <div data-help="help.tab.fair"></div>
+    <div class="card p-4">
+      <h2 class="font-bold mb-1" data-i18n="fv.title"></h2>
+      <p class="text-sm muted mb-1 num" style="direction:ltr">FV = α + β1·RealYield + β2·DXY + β3·CB_Flows + β4·Geo_Index</p>
+      <p class="text-xs faint mb-4" data-i18n="fv.sub"></p>
+      <div data-help="help.fvModel"></div>
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-3" id="coeffInputs"></div>
+    </div>
+    <div class="card p-4">
+      <h2 class="font-bold mb-3" data-i18n="fv.vars"></h2>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3" id="varInputs"></div>
+      <div class="flex flex-wrap gap-2 mt-3">
+        <button class="btn" id="btnFvFromData" data-i18n="fv.fromData"></button>
+        <button class="btn" id="btnFred" data-i18n="fv.fred"></button>
+      </div>
+      <p class="text-xs faint mt-2" data-i18n="fv.dxyNote"></p>
+    </div>
+    <div data-help="help.fvRes"></div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="fairResult"></div>
+    <div class="card p-4"><h2 class="font-bold mb-2" data-i18n="fv.local"></h2><div class="overflow-x-auto"><table class="tbl" id="tblFairLocal"></table></div></div>
+  </section>
+
+  <!-- ===== الدراسات الإحصائية ===== -->
+  <section id="tab-research" class="tab space-y-4 hidden"><div data-help="help.tab.research"></div><div id="researchRoot" class="space-y-4"></div></section>
+
+  <!-- ===== البيانات ===== -->
+  <section id="tab-data" class="tab space-y-4 hidden">
+    <div data-help="help.tab.data"></div>
+    <div class="card p-4">
+      <h2 class="font-bold mb-1" data-i18n="hist.title"></h2>
+      <p class="text-xs faint mb-3" data-i18n="hist.desc"></p>
+      <div data-help="help.hist"></div>
+      <div class="flex flex-wrap items-end gap-3">
+        <div class="w-44"><label class="lbl" data-i18n="hist.range"></label>
+          <select id="histRange" class="inp"><option value="1y" data-i18n="hist.1y"></option><option value="2y" data-i18n="hist.2y"></option><option value="5y" selected data-i18n="hist.5y"></option><option value="10y" data-i18n="hist.10y"></option></select></div>
+        <button class="btn btn-primary" id="btnHist" data-i18n="hist.btn"></button>
+        <span id="histMsg" class="text-sm muted"></span>
+      </div>
+      <ul id="histSteps" class="mt-3 text-sm space-y-1"></ul>
+    </div>
+    <div class="card p-4">
+      <h2 class="font-bold mb-1" data-i18n="man.title"></h2>
+      <p class="text-xs faint mb-3" data-i18n="man.sub"></p>
+      <div data-help="help.manual"></div>
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-3 items-end">
+        <div><label class="lbl" data-i18n="f.gold"></label><input type="number" step="0.01" id="qGold" class="inp"></div>
+        <div><label class="lbl">USD/SAR</label><input type="number" step="0.0001" id="qSar" class="inp" value="3.75"></div>
+        <div><label class="lbl">USD/EGP</label><input type="number" step="0.0001" id="qEgp" class="inp"></div>
+        <button type="button" class="btn btn-primary" id="btnManualLive" data-i18n="man.apply"></button>
+        <button type="button" class="btn" id="btnManualFill" data-i18n="man.fill"></button>
+      </div>
+      <details class="mt-3"><summary class="text-sm muted cursor-pointer" data-i18n="man.log"></summary><div class="overflow-x-auto mt-2" id="fetchLog"></div></details>
+    </div>
+    <div class="card p-4">
+      <h2 class="font-bold mb-1" data-i18n="row.title"></h2>
+      <div data-help="help.rowform"></div>
+      <form id="rowForm" class="grid grid-cols-2 md:grid-cols-7 gap-3 items-end">
+        <div><label class="lbl" data-i18n="f.date"></label><input type="date" id="fDate" class="inp" required></div>
+        <div><label class="lbl" data-i18n="f.gold"></label><input type="number" step="0.01" id="fGold" class="inp" required></div>
+        <div><label class="lbl" data-i18n="f.sar"></label><input type="number" step="0.0001" id="fSar" class="inp"></div>
+        <div><label class="lbl" data-i18n="f.egp"></label><input type="number" step="0.0001" id="fEgp" class="inp"></div>
+        <div><label class="lbl" data-i18n="f.ry"></label><input type="number" step="0.01" id="fRy" class="inp"></div>
+        <div><label class="lbl" data-i18n="f.dxy"></label><input type="number" step="0.01" id="fDxy" class="inp"></div>
+        <div><label class="lbl" data-i18n="f.vix"></label><input type="number" step="0.01" id="fVix" class="inp"></div>
+        <div class="col-span-2 md:col-span-7 flex flex-wrap gap-2">
+          <button type="submit" class="btn btn-primary" data-i18n="row.add"></button>
+          <button type="button" class="btn" id="btnFetchNow" data-i18n="row.fetch"></button>
+          <span id="fetchMsg" class="text-sm muted self-center"></span>
+        </div>
+      </form>
+    </div>
+    <div class="card p-4">
+      <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+        <h2 class="font-bold"><span data-i18n="row.stored"></span> <span id="rowCount" class="text-sm faint"></span></h2>
+        <div class="flex flex-wrap gap-2">
+          <label class="btn"><span data-i18n="csv.import"></span><input type="file" accept=".csv,text/csv" id="csvFile" class="hidden"></label>
+          <button class="btn" id="btnExport" data-i18n="csv.export"></button>
+          <button class="btn" id="btnDemo" data-i18n="row.demo"></button>
+          <button class="btn btn-danger" id="btnClear" data-i18n="row.clear"></button>
+        </div>
+      </div>
+      <p class="text-xs faint mb-2" data-i18n="csv.fmt"></p>
+      <div data-help="help.table"></div>
+      <div class="overflow-x-auto max-h-[480px] overflow-y-auto"><table class="tbl" id="tblData"></table></div>
+      <button class="btn mt-2 hidden" id="btnShowAll" data-i18n="row.showAll"></button>
+    </div>
+  </section>
+
+  <!-- ===== الإعدادات ===== -->
+  <section id="tab-settings" class="tab space-y-4 hidden">
+    <div data-help="help.tab.settings"></div>
+    <div class="card p-4">
+      <h2 class="font-bold mb-3" data-i18n="st.prem"></h2>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div><label class="lbl" data-i18n="st.premSA"></label><input type="number" step="0.01" id="sPremSA" class="inp"></div>
+        <div><label class="lbl" data-i18n="st.premEG"></label><input type="number" step="0.01" id="sPremEG" class="inp"></div>
+      </div>
+      <p class="text-xs faint mt-2" data-i18n="st.premNote"></p>
+    </div>
+    <div class="card p-4">
+      <h2 class="font-bold mb-1" data-i18n="st.model"></h2>
+      <div data-help="help.params"></div>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div><label class="lbl">lambda (EWMA)</label><input type="number" step="0.01" min="0.5" max="0.999" id="sLambda" class="inp"></div>
+        <div><label class="lbl flex items-center gap-2">nu (t) <span class="tip" tabindex="0" data-i18n-tip="st.nu.tip">?</span></label><input type="number" step="0.5" min="2.1" id="sNu" class="inp"></div>
+        <div><label class="lbl flex items-center gap-2"><span data-i18n="st.mult"></span> <span class="tip" tabindex="0" data-i18n-tip="st.mult.tip">?</span></label><input type="number" step="0.01" min="0.1" id="sMult" class="inp"></div>
+        <div><label class="lbl" data-i18n="st.n"></label><input type="number" step="1000" min="1000" max="100000" id="sN" class="inp"></div>
+        <div><label class="lbl" data-i18n="st.volModel"></label><select id="sVolModel" class="inp"><option value="ewma">EWMA</option><option value="garch">GARCH(1,1)</option></select></div>
+      </div>
+    </div>
+    <div class="card p-4">
+      <h2 class="font-bold mb-1" data-i18n="st.live"></h2>
+      <div data-help="help.live"></div>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 items-end">
+        <div><label class="lbl" data-i18n="st.refresh"></label><select id="sRefresh" class="inp"><option value="0" data-i18n="st.off"></option><option value="1" data-i18n="st.m1"></option><option value="5" data-i18n="st.m5"></option><option value="15" data-i18n="st.m15"></option></select></div>
+        <label class="flex items-center gap-2 text-sm col-span-2 md:col-span-3"><input type="checkbox" id="sAutoRow"> <span data-i18n="st.autoRow"></span></label>
+        <label class="flex items-center gap-2 text-sm col-span-2 md:col-span-4"><input type="checkbox" id="sAutoHist"> <span data-i18n="st.autoHist"></span></label>
+      </div>
+    </div>
+    <div class="flex flex-wrap gap-2">
+      <button class="btn btn-primary" id="btnSaveSettings" data-i18n="st.save"></button>
+      <button class="btn btn-danger" id="btnResetModel" data-i18n="st.reset"></button>
+    </div>
+    <p class="text-xs faint" data-i18n="st.resetNote"></p>
+    <div class="card p-4 text-sm muted leading-7">
+      <h2 class="font-bold mb-2" style="color:var(--ink)" data-i18n="meth.title"></h2>
+      <ul class="list-disc ps-5 space-y-1" id="methList"></ul>
+    </div>
+  </section>
+</main>
+<footer class="max-w-7xl mx-auto px-4 pb-8 text-xs faint"><span id="verInfo"></span></footer>
+<div id="toast" role="status"></div>
