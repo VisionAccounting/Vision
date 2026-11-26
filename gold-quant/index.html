@@ -193,6 +193,18 @@
       </form>
     </div>
     <div class="card p-4">
+      <h2 class="font-bold mb-1">التحديث اليدوي السريع</h2>
+      <p class="text-xs faint mb-3">الطريقة الاحتياطية إذا تعذر الجلب الآلي: تُطبَّق فوراً كسعر حالي دون إضافة صف.</p>
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-3 items-end">
+        <div><label class="lbl">السعر العالمي $/oz</label><input type="number" step="0.01" id="qGold" class="inp"></div>
+        <div><label class="lbl">USD/SAR</label><input type="number" step="0.0001" id="qSar" class="inp" value="3.75"></div>
+        <div><label class="lbl">USD/EGP</label><input type="number" step="0.0001" id="qEgp" class="inp"></div>
+        <button type="button" class="btn btn-primary" id="btnManualLive">تطبيق</button>
+        <button type="button" class="btn" id="btnManualFill">تعبئة من القيم الحالية</button>
+      </div>
+      <details class="mt-3"><summary class="text-sm muted cursor-pointer">سجل مصادر الجلب الآلي</summary><div class="overflow-x-auto mt-2" id="fetchLog"></div></details>
+    </div>
+    <div class="card p-4">
       <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
         <h2 class="font-bold">البيانات المخزنة <span id="rowCount" class="text-sm faint"></span></h2>
         <div class="flex flex-wrap gap-2">
@@ -260,7 +272,9 @@ const DEFAULT_SIGMA = 0.012;
 const BASE_MU = 0.0002;
 const CORS_PROXIES = [
   (u) => "https://api.cors.lol/?url=" + encodeURIComponent(u),
-  (u) => "https://corsproxy.io/?url=" + encodeURIComponent(u)
+  (u) => "https://corsproxy.io/?url=" + encodeURIComponent(u),
+  (u) => "https://api.allorigins.win/raw?url=" + encodeURIComponent(u),
+  (u) => "https://api.codetabs.com/v1/proxy?quest=" + encodeURIComponent(u)
 ];
 const DEFAULT_SETTINGS = {
   premiumSA: 0, premiumEG: 0,
@@ -468,22 +482,20 @@ const currentRef = () => {
 };
 
 // ===================== الجلب من الشبكة =====================
-// محاولة الاتصال المباشر ثم عبر CORS proxy احتياطي
-async function fetchWithProxy(url, { timeout = 8000, as = "json", proxyFirst = false } = {}) {
-  const attempts = proxyFirst ? CORS_PROXIES.map(p => p(url)) : [url, ...CORS_PROXIES.map(p => p(url))];
-  let lastErr = null;
-  for (const u of attempts) {
+// جلب مع مهلة: اتصال مباشر أولاً، ثم كل الـ proxies بالتوازي (أول نجاح يفوز)
+async function fetchWithProxy(url, { timeout = 7000, as = "json", proxyFirst = false } = {}) {
+  const one = async (u) => {
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), timeout);
     try {
       const res = await fetch(u, { signal: ctrl.signal, cache: "no-store" });
       if (!res.ok) throw new Error("HTTP " + res.status);
       const text = await res.text();
-      clearTimeout(timer);
       return as === "json" ? JSON.parse(text) : text;
-    } catch (e) { clearTimeout(timer); lastErr = e; }
-  }
-  throw lastErr || new Error("fetch failed");
+    } finally { clearTimeout(timer); }
+  };
+  if (!proxyFirst) { try { return await one(url); } catch (e) { /* ننتقل للـ proxies */ } }
+  return Promise.any(CORS_PROXIES.map(p => one(p(url))));
 }
 
 // استخراج سعر معقول من JSON غير معروف البنية (للمصدر الاحتياطي)
@@ -503,37 +515,62 @@ const extractPrice = (obj) => {
   return walk(obj, 0);
 };
 
-// جلب سعر الذهب: المصدر الأساسي ثم الاحتياطي
-const fetchGold = async () => {
-  try {
-    const d = await fetchWithProxy("https://api.gold-api.com/price/XAU");
-    const p = parseFloat(d.price);
-    if (isFinite(p) && p > 0) return { price: p, updatedAt: d.updatedAt || new Date().toISOString(), source: "gold-api.com" };
-    throw new Error("bad payload");
-  } catch (e1) {
-    const d = await fetchWithProxy("https://xaus.com/api/v1/spot");
-    const p = extractPrice(d);
-    if (!p) throw new Error("xaus payload");
-    return { price: p, updatedAt: d.updatedAt || d.timestamp || new Date().toISOString(), source: "xaus.com" };
-  }
+const goodPrice = (p) => { if (!(p > 300 && p < 50000)) throw new Error("سعر غير منطقي"); return p; };
+// مصدر currency-api يعطي الذهب والريال والجنيه في استجابة واحدة (xau = أونصات لكل دولار)
+const parseFawaz = (d) => {
+  const u = d.usd || {};
+  return { price: u.xau > 0 ? goodPrice(1 / u.xau) : null, sar: +u.sar || null, egp: +u.egp || null, updatedAt: d.date ? d.date + "T00:00:00Z" : null };
+};
+const parseFxList = (d) => {
+  const out = {};
+  const list = Array.isArray(d) ? d : (Array.isArray(d.rates) ? d.rates : null);
+  if (list) list.forEach(r => { if (r.quote) out[r.quote] = parseFloat(r.rate); });
+  else if (d.rates) Object.assign(out, d.rates);
+  if (!(out.SAR > 0 && out.EGP > 0)) throw new Error("بنية غير متوقعة");
+  return { sar: +out.SAR, egp: +out.EGP };
 };
 
-// جلب أسعار الصرف SAR وEGP مقابل الدولار
-const fetchFX = async () => {
-  try {
-    const d = await fetchWithProxy("https://api.frankfurter.dev/v2/rates?base=USD&quotes=SAR,EGP");
-    const out = {};
-    const list = Array.isArray(d) ? d : (Array.isArray(d.rates) ? d.rates : null);
-    if (list) list.forEach(r => { if (r.quote) out[r.quote] = parseFloat(r.rate); });
-    else if (d.rates) Object.assign(out, d.rates);
-    if (!(out.SAR > 0 && out.EGP > 0)) throw new Error("fx payload");
-    return { sar: +out.SAR, egp: +out.EGP, source: "frankfurter" };
-  } catch (e) {
-    const d = await fetchWithProxy("https://open.er-api.com/v6/latest/USD");
-    if (!(d.rates && d.rates.SAR && d.rates.EGP)) throw new Error("fx fallback");
-    return { sar: +d.rates.SAR, egp: +d.rates.EGP, source: "open.er-api.com" };
-  }
+// مصادر الذهب (تُجرَّب كلها بالتوازي، ولكل منها اتصال مباشر ثم proxies)
+const GOLD_SOURCES = [
+  { name: "gold-api.com", url: "https://api.gold-api.com/price/XAU", parse: (d) => ({ price: goodPrice(parseFloat(d.price)), updatedAt: d.updatedAt }) },
+  { name: "currency-api (jsDelivr)", url: "https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json", parse: parseFawaz },
+  { name: "currency-api (pages.dev)", url: "https://latest.currency-api.pages.dev/v1/currencies/usd.json", parse: parseFawaz },
+  { name: "goldprice.org", url: "https://data-asg.goldprice.org/dbXRates/USD", parse: (d) => ({ price: goodPrice(parseFloat(d.items[0].xauPrice)), updatedAt: d.date }) },
+  { name: "xaus.com", url: "https://xaus.com/api/v1/spot", parse: (d) => ({ price: goodPrice(extractPrice(d)), updatedAt: d.updatedAt || d.timestamp }) }
+];
+// مصادر أسعار الصرف
+const FX_SOURCES = [
+  { name: "frankfurter", url: "https://api.frankfurter.dev/v2/rates?base=USD&quotes=SAR,EGP", parse: parseFxList },
+  { name: "open.er-api.com", url: "https://open.er-api.com/v6/latest/USD", parse: parseFxList },
+  { name: "currency-api (jsDelivr)", url: "https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json", parse: (d) => { const r = parseFawaz(d); if (!(r.sar && r.egp)) throw new Error("بنية غير متوقعة"); return r; } },
+  { name: "currency-api (pages.dev)", url: "https://latest.currency-api.pages.dev/v1/currencies/usd.json", parse: (d) => { const r = parseFawaz(d); if (!(r.sar && r.egp)) throw new Error("بنية غير متوقعة"); return r; } }
+];
+
+// سجل المحاولات يظهر للمستخدم في تبويب البيانات
+state.fetchLog = [];
+const renderFetchLog = () => {
+  const el = $("fetchLog"); if (!el) return;
+  el.innerHTML = state.fetchLog.length ? `<table class="tbl"><thead><tr><th>المصدر</th><th>النوع</th><th>النتيجة</th><th>الزمن</th></tr></thead><tbody>` +
+    state.fetchLog.map(l => `<tr><td>${l.src}</td><td>${l.kind === "gold" ? "ذهب" : "صرف"}</td><td style="color:${l.ok ? "var(--good)" : "var(--bad)"}">${l.ok ? "✓ نجح" : "✗ " + (l.note || "فشل")}</td><td><span class="num">${l.ms}ms</span></td></tr>`).join("") + `</tbody></table>`
+    : `<p class="text-sm faint">لم تتم أي محاولة بعد.</p>`;
 };
+
+// تجربة كل المصادر بالتوازي وإرجاع أول نتيجة ناجحة (مع تسجيل كل محاولة)
+const raceSources = (list, kind) => Promise.any(list.map(async (s) => {
+  const t0 = performance.now();
+  try {
+    const d = await fetchWithProxy(s.url);
+    const r = { ...s.parse(d), source: s.name };
+    state.fetchLog.push({ src: s.name, kind, ok: true, ms: Math.round(performance.now() - t0) });
+    renderFetchLog();
+    return r;
+  } catch (e) {
+    const note = e && e.errors ? "كل المسارات فشلت" : (e && e.message) || "فشل";
+    state.fetchLog.push({ src: s.name, kind, ok: false, note, ms: Math.round(performance.now() - t0) });
+    renderFetchLog();
+    throw e;
+  }
+}));
 
 // آخر قيمة رقمية من CSV الخاص بـ FRED
 const fetchFredLast = async (id) => {
@@ -544,36 +581,56 @@ const fetchFredLast = async (id) => {
   throw new Error("no data");
 };
 
-// تنفيذ الجلب الحي وتحديث الحالة مع الرجوع لآخر سعر معروف عند الفشل
+// تحديث السعر والصرف يدوياً (الطريقة الاحتياطية الأخيرة)
+const applyManualLive = (price, sar, egp) => {
+  const prev = loadLive() || {};
+  saveLive({ price, sar, egp, updatedAt: new Date().toISOString(), fetchedAt: new Date().toISOString(), source: "يدوي", fxSource: "يدوي" });
+  state.liveError = null; retryCount = 0; clearTimeout(retryTimer);
+  $("liveStatus").textContent = "تحديث يدوي";
+  refreshAll(true);
+  return prev;
+};
+
+// تنفيذ الجلب الحي: مصادر متعددة + إعادة محاولة تلقائية + الرجوع لآخر سعر معروف
+let fetching = false, retryCount = 0, retryTimer = null;
 const fetchLiveNow = async () => {
+  if (fetching) return;
+  fetching = true; clearTimeout(retryTimer);
   const msg = (t) => { $("fetchMsg").textContent = t; $("liveStatus").textContent = t; };
-  msg("جاري الجلب...");
+  msg("جاري الجلب من عدة مصادر...");
+  state.fetchLog = []; renderFetchLog();
   const prevLive = loadLive() || {};
-  let gold = null, fx = null, goldErr = null;
-  const [g, f] = await Promise.allSettled([fetchGold(), fetchFX()]);
-  if (g.status === "fulfilled") gold = g.value; else goldErr = g.reason;
-  if (f.status === "fulfilled") fx = f.value;
+  const [g, f] = await Promise.allSettled([raceSources(GOLD_SOURCES, "gold"), raceSources(FX_SOURCES, "fx")]);
+  const gold = g.status === "fulfilled" ? g.value : null;
+  let fx = f.status === "fulfilled" ? f.value : null;
+  if (!fx && gold && gold.sar && gold.egp) fx = { sar: gold.sar, egp: gold.egp, source: gold.source };
+  const now = new Date().toISOString();
 
   if (gold) {
-    const live = { price: gold.price, updatedAt: gold.updatedAt, source: gold.source,
-      sar: fx ? fx.sar : prevLive.sar, egp: fx ? fx.egp : prevLive.egp, fxSource: fx ? fx.source : (prevLive.fxSource || null), fetchedAt: new Date().toISOString() };
+    const live = { price: gold.price, updatedAt: gold.updatedAt || now, source: gold.source,
+      sar: fx ? fx.sar : prevLive.sar, egp: fx ? fx.egp : prevLive.egp, fxSource: fx ? fx.source : (prevLive.fxSource || null), fetchedAt: now };
     saveLive(live);
-    $("fDate").value = todayISO();
-    $("fGold").value = gold.price.toFixed(2);
+    $("fDate").value = todayISO(); $("fGold").value = gold.price.toFixed(2);
     if (live.sar) $("fSar").value = (+live.sar).toFixed(4);
     if (live.egp) $("fEgp").value = (+live.egp).toFixed(4);
     const last = loadData().slice(-1)[0];
-    if (last) { if (!$("fRy").value && last.realYield !== null && last.realYield !== undefined) $("fRy").value = last.realYield; if (!$("fDxy").value && last.dxy !== null && last.dxy !== undefined) $("fDxy").value = last.dxy; }
+    if (last) { if (!$("fRy").value && last.realYield != null) $("fRy").value = last.realYield; if (!$("fDxy").value && last.dxy != null) $("fDxy").value = last.dxy; }
     msg(`تم: ${fmt(gold.price)} $ من ${gold.source}${fx ? "" : " — تعذر جلب الصرف، استُخدم آخر سعر معروف"}`);
-    state.liveError = null;
+    state.liveError = null; retryCount = 0;
   } else {
+    if (fx && prevLive.price) saveLive({ ...prevLive, sar: fx.sar, egp: fx.egp, fxSource: fx.source, fetchedAt: now });
     const rows = loadData(), last = rows[rows.length - 1];
-    const known = prevLive.price ? `${fmt(prevLive.price)} $ بتاريخ ${String(prevLive.updatedAt || "").slice(0, 10)}` :
-      (last ? `${fmt(+last.gold)} $ بتاريخ ${last.date}` : null);
-    state.liveError = known ? `تعذر الاتصال بمصادر السعر — يُستخدم آخر سعر معروف: ${known}` : "تعذر الاتصال بمصادر السعر ولا يوجد سعر مخزن.";
+    const known = prevLive.price ? `${fmt(prevLive.price)} $ بتاريخ ${String(prevLive.updatedAt || "").slice(0, 10)}` : (last ? `${fmt(+last.gold)} $ بتاريخ ${last.date}` : null);
+    state.liveError = (known ? `تعذر الاتصال بكل مصادر السعر — يُستخدم آخر سعر معروف: ${known}.` : "تعذر الاتصال بكل مصادر السعر ولا يوجد سعر مخزن.") +
+      (fx ? " (تم تحديث الصرف فقط)" : "") + " يمكنك استخدام «التحديث اليدوي السريع» في تبويب البيانات.";
+    if (++retryCount <= 3) {
+      const wait = 20 * retryCount;
+      state.liveError += ` إعادة محاولة تلقائية خلال ${wait} ثانية (${retryCount}/3).`;
+      retryTimer = setTimeout(fetchLiveNow, wait * 1000);
+    }
     msg("فشل الجلب");
-    console.warn("gold fetch failed", goldErr);
   }
+  fetching = false;
   refreshAll(true);
 };
 
@@ -1030,8 +1087,19 @@ const bind = () => {
     Object.values(state.charts).forEach(c => c.resize());
   }));
   $("btnTheme").addEventListener("click", () => setTheme(!document.documentElement.classList.contains("dark")));
-  $("btnFetchHeader").addEventListener("click", fetchLiveNow);
-  $("btnFetchNow").addEventListener("click", fetchLiveNow);
+  $("btnFetchHeader").addEventListener("click", () => { retryCount = 0; fetchLiveNow(); });
+  $("btnFetchNow").addEventListener("click", () => { retryCount = 0; fetchLiveNow(); });
+  $("btnManualLive").addEventListener("click", () => {
+    const p = num($("qGold").value), a = num($("qSar").value), e = num($("qEgp").value);
+    if (!(p > 300 && p < 50000) || !(a > 0) || !(e > 0)) { toast("أدخل السعر العالمي (أونصة) وسعري الصرف بقيم صحيحة"); return; }
+    applyManualLive(p, a, e); toast("تم تطبيق الأسعار اليدوية كسعر حالي");
+  });
+  $("btnManualFill").addEventListener("click", () => {
+    const r = currentRef();
+    if (r.price) $("qGold").value = r.price.toFixed(2);
+    if (r.sar) $("qSar").value = (+r.sar).toFixed(4);
+    if (r.egp) $("qEgp").value = (+r.egp).toFixed(4);
+  });
 
   $("inMu").addEventListener("change", () => { const v = num($("inMu").value); if (v === null || Math.abs(v) > 0.1) { toast("قيمة mu غير صالحة (المدى المعقول ±0.05)"); return; } state.settings.mu = v; saveSettings(state.settings); });
   $("btnSimulate").addEventListener("click", () => {
@@ -1107,7 +1175,15 @@ const init = () => {
   // جلب تلقائي عند الفتح إذا كان آخر جلب أقدم من 15 دقيقة
   if (!live || (Date.now() - new Date(live.fetchedAt || 0).getTime()) > 15 * 60 * 1000) fetchLiveNow();
 };
-document.addEventListener("DOMContentLoaded", init);
+document.addEventListener("DOMContentLoaded", () => {
+  init(); renderFetchLog();
+  // تحديث تلقائي كل 5 دقائق أثناء ظهور الصفحة، وعند العودة إليها إن مضى وقت
+  setInterval(() => { if (!document.hidden) fetchLiveNow(); }, 5 * 60 * 1000);
+  document.addEventListener("visibilitychange", () => {
+    const l = loadLive();
+    if (!document.hidden && (!l || Date.now() - new Date(l.fetchedAt || 0).getTime() > 5 * 60 * 1000)) fetchLiveNow();
+  });
+});
 </script>
 </body>
 </html>
